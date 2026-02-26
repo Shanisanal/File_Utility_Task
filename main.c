@@ -50,19 +50,19 @@ ARGUMENTS Parse_Arguments(uint16_t unArgc, uint8_t *pArgv[])
 {
     ARGUMENTS args = {0};
 
-    for (int iIndex = 1; iIndex < unArgc; iIndex++) 
+    for (uint16_t unIndex = 1; unIndex < unArgc; unIndex++) 
     {
-        if (strcmp((char *)pArgv[iIndex], "-t") == 0 && (iIndex + 1 < unArgc)) 
+        if (strcmp((char *)pArgv[unIndex], "-t") == 0 && (unIndex + 1 < unArgc)) 
         {
-            args.pType = pArgv[iIndex + 1];
+            args.pType = pArgv[unIndex + 1];
         } 
-        else if (strcmp((char *)pArgv[iIndex], "-i") == 0 && (iIndex + 1 < unArgc)) 
+        else if (strcmp((char *)pArgv[unIndex], "-i") == 0 && (unIndex + 1 < unArgc)) 
         {
-            args.pInput = pArgv[iIndex + 1];
+            args.pInput = pArgv[unIndex + 1];
         } 
-        else if (strcmp((char *)pArgv[iIndex], "-o") == 0 && (iIndex + 1 < unArgc)) 
+        else if (strcmp((char *)pArgv[unIndex], "-o") == 0 && (unIndex + 1 < unArgc)) 
         {
-            args.pOutput = pArgv[iIndex + 1];
+            args.pOutput = pArgv[unIndex + 1];
         }
     }
 
@@ -105,7 +105,7 @@ void RunUtility(ARGUMENTS args)
 // Purpose : Entry point for the file utility application.
 //           Parses command-line arguments and delegates execution
 //           to the RunUtility() function.
-// Inputs  : unArgc  - total number of command-line arguments
+// Inputs  : iArgc  - total number of command-line arguments
 //           pArgv[] - array of argument strings
 // Outputs : Executes the requested operation and writes results to the specified output file.
 // Return  : int - Returns 0 upon successful completion,
@@ -114,9 +114,9 @@ void RunUtility(ARGUMENTS args)
 //   - Calls Parse_Arguments() to extract type, input, and output parameters.
 //   - Calls RunUtility() to perform the requested operation.
 //*****************************************************************************
-int main(uint16_t unArgc, uint8_t *pArgv[]) 
+int main(int iArgc, char *pArgv[]) 
 {
-    ARGUMENTS args = Parse_Arguments(unArgc, pArgv);
+    ARGUMENTS args = Parse_Arguments((uint16_t)iArgc, (uint8_t **)pArgv);
 
     RunUtility(args);
 

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include "Include/gzip/gzip.h"
 
 int main(int argc, char *argv[]) 
 {
@@ -21,6 +22,12 @@ int main(int argc, char *argv[])
         {
             output = argv[i + 1];
         }
+
+        if (strcmp(type, "gzip") == 0) 
+        { 
+            gzip_file(input, output); 
+        }
+        
     }
 
     printf("Type: %s\n", type);

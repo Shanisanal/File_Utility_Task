@@ -4,11 +4,11 @@ This project is a command‑line file utility designed to perform different file
 # Format
 filename -t <-type> -i <-inputfilename> -o <-outputfilename>
 
--t <type> → specifies the type of operation (gzip, hexdump, srec).
+-t <-type> → specifies the type of operation (gzip, hexdump, srec).
 
--i <inputfilename> → path to the input file.
+-i <-inputfilename> → path to the input file.
 
--o <outputfilename> → path to the output file.
+-o <-outputfilename> → path to the output file.
 
 # Install Dependencies
 - sudo apt-get update

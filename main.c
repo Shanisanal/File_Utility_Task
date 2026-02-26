@@ -1,38 +1,126 @@
+//**************************** File_Utility_Task ****************************** 
+//  Copyright (c) 2026 Trenser Technology Solutions
+//  All Rights Reserved 
+//*****************************************************************************
+//
+// File      : main.c
+// Summary   : Entry point for file compression utility
+// Note      : Parses command-line arguments (-t, -i, -o), and calls gzip functions to compress
+//             files.
+// Author    : Shani
+// Date      : Feb 26, 2026
+//
+//***************************************************************************** 
+
+//******************************* Include Files *******************************
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 #include "Include/gzip/gzip.h"
 
-int main(int argc, char *argv[]) 
+//******************************* Local Types ********************************* 
+ 
+//***************************** Local Constants ******************************* 
+ 
+//***************************** Local Variables ******************************* 
+ typedef struct 
+ { 
+    uint8_t  *pType; 
+    uint8_t  *pInput; 
+    uint8_t  *pOutput; 
+} ARGUMENTS;
+//****************************** Local Functions ****************************** 
+
+//****************************** Parse_Arguments ******************************
+// Purpose : Extracts command-line arguments and stores them in an ARGUMENTS structure .
+// Inputs  : unArgc  - total number of command-line arguments
+//           pArgv[] - array of argument strings
+// Outputs : ARGUMENTS structure containing parsed values:
+//              pType   - gzip / hexdump / srec
+//              pInput  - input filename
+//              pOutput - output filename 
+// Return  : ARGUMENTS - populated structure with parsed arguments
+// Notes   : 
+//   - Recognizes flags: -t <type>, -i <input>, -o <output>
+//   - If a flag is missing, the corresponding field remains NULL.
+//   - Caller must validate that required arguments are present before use.
+//*****************************************************************************
+
+ARGUMENTS Parse_Arguments(uint16_t unArgc, uint8_t *pArgv[]) 
 {
-    char *type = NULL;
-    char *input = NULL;
-    char *output = NULL;
+    ARGUMENTS args = {0};
 
-    for (int i = 1; i < argc; i++) 
+    for (int iIndex = 1; iIndex < unArgc; iIndex++) 
     {
-        if (strcmp(argv[i], "-t") == 0 && i + 1 < argc) 
+        if (strcmp((char *)pArgv[iIndex], "-t") == 0 && (iIndex + 1 < unArgc)) 
         {
-            type = argv[i + 1];
+            args.pType = pArgv[iIndex + 1];
         } 
-        else if (strcmp(argv[i], "-i") == 0 && i + 1 < argc) 
+        else if (strcmp((char *)pArgv[iIndex], "-i") == 0 && (iIndex + 1 < unArgc)) 
         {
-            input = argv[i + 1];
+            args.pInput = pArgv[iIndex + 1];
         } 
-        else if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) 
+        else if (strcmp((char *)pArgv[iIndex], "-o") == 0 && (iIndex + 1 < unArgc)) 
         {
-            output = argv[i + 1];
+            args.pOutput = pArgv[iIndex + 1];
         }
-
-        if (strcmp(type, "gzip") == 0) 
-        { 
-            gzip_file(input, output); 
-        }
-        
     }
 
-    printf("Type: %s\n", type);
-    printf("Input file: %s\n", input);
-    printf("Output file: %s\n", output);
+    return args;
+}
+
+//****************************** RunUtility ******************************
+// Purpose : Executes the file utility based on parsed arguments.Validates required parameters and calls the appropriate
+//           processing function depending on the specified type.
+// Inputs  : args - ARGUMENTS structure containing:
+//              pType   - operation type (gzip / hexdump / srec)
+//              pInput  - input filename
+//              pOutput - output filename
+// Outputs : Processed file written to the specified output filename, depending on the operation type.
+// Return  : None 
+// Notes   : 
+//   - Currently supports "gzip", "hexdump", and "srec" types.
+//   - Displays error if unsupported type is provided.
+//*****************************************************************************
+
+void RunUtility(ARGUMENTS args) 
+{
+    if (args.pType == NULL || args.pInput == NULL || args.pOutput == NULL) 
+    {
+        fprintf(stderr, "Error: Missing required arguments. Usage: -t <type> -i <inputfilename> -o <outputfilename>\n");
+        return;
+    }
+
+    if (strcmp((char *)args.pType, "gzip") == 0) 
+    {
+        gzip_file((char *)args.pInput, (char *)args.pOutput);
+    } 
+    else 
+    {
+        fprintf(stderr, "Error: Unsupported type . Only 'gzip' 'hexdump' and 'srec' is supported.\n");
+    }
+}
+
+//****************************** main ******************************
+// Purpose : Entry point for the file utility application.
+//           Parses command-line arguments and delegates execution
+//           to the RunUtility() function.
+// Inputs  : unArgc  - total number of command-line arguments
+//           pArgv[] - array of argument strings
+// Outputs : Executes the requested operation and writes results to the specified output file.
+// Return  : int - Returns 0 upon successful completion,
+//           non-zero if an error occurs during argument parsing or execution.
+// Notes   : 
+//   - Calls Parse_Arguments() to extract type, input, and output parameters.
+//   - Calls RunUtility() to perform the requested operation.
+//*****************************************************************************
+int main(uint16_t unArgc, uint8_t *pArgv[]) 
+{
+    ARGUMENTS args = Parse_Arguments(unArgc, pArgv);
+
+    RunUtility(args);
 
     return 0;
 }
+
+// EOF

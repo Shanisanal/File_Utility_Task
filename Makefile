@@ -1,0 +1,49 @@
+# Compiler and flags
+CC = gcc
+CFLAGS = -Wall -Wextra -O2
+DEBUGFLAGS = -Wall -Wextra -g
+LDFLAGS = -lz   # link zlib if needed
+
+# Project structure
+SRC_DIR = src
+INC_DIR = include
+RELEASE_DIR = release
+DEBUG_DIR = debug
+
+# Source files (currently just main.c, can add more later)
+SRCS = main.c
+OBJS_RELEASE = $(SRCS:%.c=$(RELEASE_DIR)/%.o)
+OBJS_DEBUG   = $(SRCS:%.c=$(DEBUG_DIR)/%.o)
+
+# Executable name
+TARGET = utility.exe
+
+# Default rule
+all: release
+
+# Build release version
+release: $(RELEASE_DIR)/$(TARGET)
+
+$(RELEASE_DIR)/$(TARGET): $(OBJS_RELEASE)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+$(RELEASE_DIR)/%.o: %.c
+	@mkdir -p $(RELEASE_DIR)
+	$(CC) $(CFLAGS) -I$(INC_DIR) -c $< -o $@
+
+# Build debug version
+debug: $(DEBUG_DIR)/$(TARGET)
+
+$(DEBUG_DIR)/$(TARGET): $(OBJS_DEBUG)
+	$(CC) $(DEBUGFLAGS) -o $@ $^ $(LDFLAGS)
+
+$(DEBUG_DIR)/%.o: %.c
+	@mkdir -p $(DEBUG_DIR)
+	$(CC) $(DEBUGFLAGS) -I$(INC_DIR) -c $< -o $@
+
+# Clean up build artifacts
+clean:
+	rm -rf $(RELEASE_DIR) $(DEBUG_DIR)
+
+.PHONY: all release debug clean
+

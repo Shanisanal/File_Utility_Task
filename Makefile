@@ -11,9 +11,14 @@ RELEASE_DIR = release
 DEBUG_DIR = debug
 
 # Source files (currently just main.c, can add more later)
-SRCS = main.c Source/gzip/gzip.c 
-OBJS_RELEASE = $(SRCS:%.c=$(RELEASE_DIR)/%.o)
-OBJS_DEBUG   = $(SRCS:%.c=$(DEBUG_DIR)/%.o)
+# Source files
+SRCS = main.c Source/gzip/gzip.c
+
+# Flatten object names
+OBJS_RELEASE = $(addprefix $(RELEASE_DIR)/, $(notdir $(SRCS:.c=.o)))
+OBJS_DEBUG   = $(addprefix $(DEBUG_DIR)/, $(notdir $(SRCS:.c=.o)))
+
+vpath %.c Source Source/gzip
 
 # Executable name
 TARGET = utility.exe

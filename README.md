@@ -2,7 +2,7 @@
 This project is a command‑line file utility designed to perform different file conversions. It supports gzip , hexdump generation, and SREC conversion.
 
 # Format
-filename -t <type> -i <inputfilename> -o <outputfilename>
+filename -t <-type> -i <-inputfilename> -o <-outputfilename>
 
 -t <type> → specifies the type of operation (gzip, hexdump, srec).
 
@@ -11,8 +11,8 @@ filename -t <type> -i <inputfilename> -o <outputfilename>
 -o <outputfilename> → path to the output file.
 
 # Install Dependencies
-sudo apt-get update
-sudo apt-get install zlib1g-dev
+- sudo apt-get update
+- sudo apt-get install zlib1g-dev
 
 # Build Instructions
 make

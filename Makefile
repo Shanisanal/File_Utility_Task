@@ -11,7 +11,7 @@ RELEASE_DIR = release
 DEBUG_DIR = debug
 
 # Source files (currently just main.c, can add more later)
-SRCS = main.c
+SRCS = main.c Source/gzip/gzip.c 
 OBJS_RELEASE = $(SRCS:%.c=$(RELEASE_DIR)/%.o)
 OBJS_DEBUG   = $(SRCS:%.c=$(DEBUG_DIR)/%.o)
 

@@ -56,3 +56,9 @@ dkms.conf
 
 # VS Code settings 
 .vscode/
+
+# Ignore all text files
+*.txt
+
+# Ignore all gzip compressed files
+*.gz

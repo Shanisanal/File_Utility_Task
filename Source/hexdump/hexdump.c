@@ -36,57 +36,57 @@
 //*****************************************************************************
 void Hexdump_file(const char *pInput, const char *pOutput) 
 {
-    FILE *fin = fopen(pInput, "rb");
+    FILE *pInputFile = fopen(pInput, "rb");
 
-    FILE *fout = fopen(pOutput, "w");
+    FILE *pOutputFile = fopen(pOutput, "w");
 
-    if (!fin || !fout) 
+    if (!pInputFile || !pOutputFile) 
     {
         perror("File open failed");
-        if (fin) 
+        if (pInputFile) 
         {
-            fclose(fin);
+            fclose(pInputFile);
         }
-        if (fout) 
+        if (pOutputFile) 
         {
-            fclose(fout);
+            fclose(pOutputFile);
         } 
         return;
     }
 
-    uint8_t ucbuffer[HEXDUMP_BYTES_PER_LINE];    
+    uint8_t ucbuffer[HEXDUMP_BYTES_PER_LINE] = {0};    
     size_t bytesRead;
     size_t offset = 0;
 
-    while ((bytesRead = fread(ucbuffer, 1, sizeof(ucbuffer), fin)) > 0) 
+    while ((bytesRead = fread(ucbuffer, 1, sizeof(ucbuffer), pInputFile)) > 0) 
     {
-        fprintf(fout, "%08lx  ", offset);
+        fprintf(pOutputFile, "%08lx  ", offset);
 
-        for (size_t i = 0; i < 16; i++) 
+        for (size_t Index = 0; Index < HEXDUMP_BYTES_PER_LINE; Index++) 
         {
-            if (i < bytesRead)
+            if (Index < bytesRead)
             {
-               fprintf(fout, "%02x ", ucbuffer[i]);
+               fprintf(pOutputFile, "%02x ", ucbuffer[Index]);
             }
             else
             {
-                fprintf(fout, "   ");
+                fprintf(pOutputFile, "   ");
             }
         }
 
         // Write ASCII equivalents
-        fprintf(fout, " |");
-        for (size_t i = 0; i < bytesRead; i++) 
+        fprintf(pOutputFile, " |");
+        for (uint16_t unIndex = 0; unIndex < bytesRead; unIndex++) 
         {
-            fprintf(fout, "%c", isprint(ucbuffer[i]) ? ucbuffer[i] : '.');
+            fprintf(pOutputFile, "%c", isprint(ucbuffer[unIndex]) ? ucbuffer[unIndex] : '.');
         }
-        fprintf(fout, "|\n");
+        fprintf(pOutputFile, "|\n");
 
         offset += bytesRead;
     }
 
-    fclose(fin);
-    fclose(fout);
+    fclose(pInputFile);
+    fclose(pOutputFile);
 }
 
 

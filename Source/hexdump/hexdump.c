@@ -56,7 +56,7 @@ void Hexdump_file(const char *pInput, const char *pOutput)
 
     uint8_t ucbuffer[HEXDUMP_BYTES_PER_LINE];    
     size_t bytesRead;
-    size_t offset ;
+    size_t offset = 0;
 
     while ((bytesRead = fread(ucbuffer, 1, sizeof(ucbuffer), fin)) > 0) 
     {

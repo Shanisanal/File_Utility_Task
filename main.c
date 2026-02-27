@@ -17,6 +17,7 @@
 #include <string.h>
 #include <stdint.h>
 #include "Include/gzip/gzip.h"
+#include "Include/hexdump/hexdump.h"
 
 //******************************* Local Types ********************************* 
  
@@ -97,7 +98,7 @@ void RunUtility(ARGUMENTS args)
     } 
     else if (strcmp((char *)args.pType, "hexdump") == 0) 
     {
-        hexdump_file((char *)args.pInput, (char *)args.pOutput);
+        Hexdump_file((char *)args.pInput, (char *)args.pOutput);
     } 
     else if (strcmp((char *)args.pType, "srec") == 0) 
     {

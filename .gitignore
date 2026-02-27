@@ -62,3 +62,6 @@ dkms.conf
 
 # Ignore all gzip compressed files
 *.gz
+
+# Ignore all pdf files
+*.pdf

@@ -25,7 +25,7 @@
  
 //****************************** Local Functions ******************************
 
-//****************************** hexdump_file ******************************
+//****************************** Hexdump_file ******************************
 // Purpose : Generates a hexadecimal dump of the input file and writes the formatted output (hex values + ASCII equivalents) to
 //           the specified output file.
 // Inputs  : pInput  - path to the input file 
@@ -34,7 +34,7 @@
 // Return  : None
 // Notes   : None
 //*****************************************************************************
-void hexdump_file(const char *pInput, const char *pOutput) 
+void Hexdump_file(const char *pInput, const char *pOutput) 
 {
     FILE *fin = fopen(pInput, "rb");
 
@@ -62,7 +62,6 @@ void hexdump_file(const char *pInput, const char *pOutput)
     {
         fprintf(fout, "%08lx  ", offset);
 
-        // Write hex values
         for (size_t i = 0; i < 16; i++) 
         {
             if (i < bytesRead)

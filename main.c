@@ -102,7 +102,7 @@ void RunUtility(ARGUMENTS args)
     } 
     else if (strcmp((char *)args.pType, "srec") == 0) 
     {
-//        srec_file((char *)args.pInput, (char *)args.pOutput);
+        srec_file((char *)args.pInput, (char *)args.pOutput);
     } 
     else 
     {

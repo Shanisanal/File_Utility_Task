@@ -22,9 +22,8 @@
 //***************************** Global Variables ****************************** 
  
 //**************************** Forward Declarations *************************** 
+void Hexdump_file(const char *pInput, const char *pOutput) ;
 
-//***************************** Class Declaration ***************************** 
- 
 //*********************** Inline Method Implementations *********************** 
 
 #endif

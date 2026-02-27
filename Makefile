@@ -12,13 +12,13 @@ DEBUG_DIR = debug
 
 # Source files (currently just main.c, can add more later)
 # Source files
-SRCS = main.c Source/gzip/gzip.c
+SRCS = main.c Source/gzip/gzip.c Source/hexdump/hexdump.c
 
 # Flatten object names
 OBJS_RELEASE = $(addprefix $(RELEASE_DIR)/, $(notdir $(SRCS:.c=.o)))
 OBJS_DEBUG   = $(addprefix $(DEBUG_DIR)/, $(notdir $(SRCS:.c=.o)))
 
-vpath %.c Source Source/gzip
+vpath %.c Source Source/gzip Source/hexdump
 
 # Executable name
 TARGET = utility.exe

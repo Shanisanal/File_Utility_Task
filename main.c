@@ -95,6 +95,14 @@ void RunUtility(ARGUMENTS args)
     {
         gzip_file((char *)args.pInput, (char *)args.pOutput);
     } 
+    else if (strcmp((char *)args.pType, "hexdump") == 0) 
+    {
+        hexdump_file((char *)args.pInput, (char *)args.pOutput);
+    } 
+    else if (strcmp((char *)args.pType, "srec") == 0) 
+    {
+//        srec_file((char *)args.pInput, (char *)args.pOutput);
+    } 
     else 
     {
         fprintf(stderr, "Error: Unsupported type . Only 'gzip' 'hexdump' and 'srec' is supported.\n");

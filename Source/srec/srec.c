@@ -20,15 +20,22 @@
 //******************************* Local Types ********************************* 
  
 //***************************** Local Constants ******************************* 
-#define SREC_DATA_PER_LINE          16
-#define SREC_DATA_RECORD_ADDR       0x08000000
-#define SREC_DATA_RECORD_TYPE       "S3"
-#define SREC_DATA_RECORD_ADDR_SIZE  4
 #define SREC_HEADER                 "S0"
 #define SREC_HEADER_ADDR            0x0000
 #define SREC_HEADER_ADDR_SIZE       2
-#define SREC_CHECKSUM_SIZE          1
 #define PROJECT_NAME                "SREC File Converter"
+
+#define SREC_DATA_RECORD_TYPE       "S3"
+#define SREC_DATA_PER_LINE          16
+#define SREC_DATA_RECORD_ADDR       0x08000000
+#define SREC_DATA_RECORD_ADDR_SIZE  4
+
+#define SREC_COUNT_RECORD_S5        "S5"
+#define SREC_COUNT_RECORD_S6        "S6"
+#define SREC_S5_RECORD_SIZE          2
+#define SREC_S6_RECORD_SIZE          3
+
+#define SREC_CHECKSUM_SIZE           1
 
 //***************************** Local Variables ******************************* 
  
@@ -119,6 +126,7 @@ void srec_file(const char *pInput, const char *pOutput)
     uint8_t ucBuffer[SREC_DATA_PER_LINE] = {0};
     size_t bytesRead;
     uint32_t ulAddress = SREC_DATA_RECORD_ADDR;
+    uint32_t ulRecordCounter = 0;
 
     while ((bytesRead = fread(ucBuffer, 1, sizeof(ucBuffer), pInputFile)) > 0) 
     {
@@ -138,7 +146,27 @@ void srec_file(const char *pInput, const char *pOutput)
 
         //Increment the address for the next line
         ulAddress += bytesRead;
+
+        // Count this data record
+        ulRecordCounter++;
     }
+
+    /* SREC  Record: S5/S6      */ 
+    uint8_t ucCountRecordByteCount = 0;
+    if(ulRecordCounter <= 0xFFFF)
+    {
+        ucCountRecordByteCount = SREC_S5_RECORD_SIZE + SREC_CHECKSUM_SIZE;
+        uint8_t ucS5Checksum = Calculate_Srec_Checksum(ucCountRecordByteCount, ulRecordCounter, NULL, 0);
+        fprintf(pOutputFile, "%s%02X%04X%02X\n", SREC_COUNT_RECORD_S5, ucCountRecordByteCount, (uint16_t)ulRecordCounter, ucS5Checksum);
+
+    }
+    else if(ulRecordCounter <= 0xFFFFFF)
+    {
+        ucCountRecordByteCount = SREC_S6_RECORD_SIZE + SREC_CHECKSUM_SIZE;
+        uint8_t ucS6Checksum = Calculate_Srec_Checksum(ucCountRecordByteCount, ulRecordCounter, NULL, 0);
+        fprintf(pOutputFile, "%s%02X%06X%02X\n", SREC_COUNT_RECORD_S6, ucCountRecordByteCount, ulRecordCounter, ucS6Checksum);
+    }
+
     fprintf(pOutputFile, "S70500000000FA\n");
 
     fclose(pInputFile);

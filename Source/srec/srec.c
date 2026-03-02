@@ -15,21 +15,27 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <string.h>
 
 //******************************* Local Types ********************************* 
  
 //***************************** Local Constants ******************************* 
 #define SREC_DATA_PER_LINE 16
+#define SREC_HEADER "S0"
+#define SREC_HEADER_ADDR 0x0000
+#define SREC_HEADER_ADDR_SIZE 2
+#define SREC_HEADER_CHECKSUM_SIZE 1
+#define PROJECT_NAME "SREC File Converter"
 
 //***************************** Local Variables ******************************* 
  
-//****************************** Local Functions ******************************
+//****************************** Local Functions ******************************/
 
 //************************** Calculate_Srec_Checksum ***************************
 // Purpose : Calculates the Motorola S-record checksum for a single line of data.
 //           The checksum is the one's complement of the sum of the count,  address, and data bytes.
 // Inputs  : ucCount - The total number of bytes in the record (Address + Data + Checksum).
-//           ulAddr  - The 32-bit memory address for the record.
+//           ulAddr  - The memory address for the record.
 //           pData   - Pointer to the buffer containing the raw data bytes.
 //           DataLen - The number of data bytes in the current record.
 // Outputs : Returns a single byte representing the calculated checksum.
@@ -88,7 +94,29 @@ void srec_file(const char *pInput, const char *pOutput)
     size_t bytesRead;
     uint32_t ulAddress = 0;
 
-    fprintf(pOutputFile, "S00600004844521B\n"); 
+    /******************************************************************************
+    * SREC Record: S0 (Header) 
+    *****************************************************************************/
+    const char *pProjectName = PROJECT_NAME;
+    uint8_t ucProjectNameLen = (uint8_t)strlen(pProjectName);
+
+    // Calculate Byte Count: Address (2 byte ) + Data len + Checksum (1 byte)
+    uint8_t ucHeaderByteCount= ucProjectNameLen + SREC_HEADER_ADDR_SIZE + SREC_HEADER_CHECKSUM_SIZE; 
+    
+    // Calculate Checksum for the S0 Record
+    uint8_t ucHeaderChecksum = Calculate_Srec_Checksum(ucHeaderByteCount, 0, (uint8_t *)pProjectName, ucProjectNameLen);
+
+    // Print Type (S0), ucHeaderByteCount, and Address 
+    fprintf(pOutputFile, "%s%02X%04X", SREC_HEADER, ucHeaderByteCount, SREC_HEADER_ADDR);
+ 
+    // Print Project Name as Hex ASCII
+    for (uint8_t iIndex = 0; iIndex < ucProjectNameLen; iIndex++) 
+    {
+        fprintf(pOutputFile, "%02X", (uint8_t)pProjectName[iIndex]);
+    }
+
+    // Print the calculated SO record Checksum and Terminate Line
+    fprintf(pOutputFile, "%02X\n", ucHeaderChecksum);
 
     // 2. Write Data Records (S3 for 32-bit addresses)
     while ((bytesRead = fread(ucBuffer, 1, sizeof(ucBuffer), pInputFile)) > 0) 

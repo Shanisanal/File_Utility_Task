@@ -20,12 +20,15 @@
 //******************************* Local Types ********************************* 
  
 //***************************** Local Constants ******************************* 
-#define SREC_DATA_PER_LINE 16
-#define SREC_HEADER "S0"
-#define SREC_HEADER_ADDR 0x0000
-#define SREC_HEADER_ADDR_SIZE 2
-#define SREC_HEADER_CHECKSUM_SIZE 1
-#define PROJECT_NAME "SREC File Converter"
+#define SREC_DATA_PER_LINE          16
+#define SREC_DATA_RECORD_ADDR       0x08000000
+#define SREC_DATA_RECORD_TYPE       "S3"
+#define SREC_DATA_RECORD_ADDR_SIZE  4
+#define SREC_HEADER                 "S0"
+#define SREC_HEADER_ADDR            0x0000
+#define SREC_HEADER_ADDR_SIZE       2
+#define SREC_CHECKSUM_SIZE          1
+#define PROJECT_NAME                "SREC File Converter"
 
 //***************************** Local Variables ******************************* 
  
@@ -90,18 +93,12 @@ void srec_file(const char *pInput, const char *pOutput)
         return;
     }
 
-    uint8_t ucBuffer[SREC_DATA_PER_LINE];
-    size_t bytesRead;
-    uint32_t ulAddress = 0;
-
-    /******************************************************************************
-    * SREC Record: S0 (Header) 
-    *****************************************************************************/
+    /* SREC Record: S0 (Header)*/ 
     const char *pProjectName = PROJECT_NAME;
     uint8_t ucProjectNameLen = (uint8_t)strlen(pProjectName);
 
     // Calculate Byte Count: Address (2 byte ) + Data len + Checksum (1 byte)
-    uint8_t ucHeaderByteCount= ucProjectNameLen + SREC_HEADER_ADDR_SIZE + SREC_HEADER_CHECKSUM_SIZE; 
+    uint8_t ucHeaderByteCount= ucProjectNameLen + SREC_HEADER_ADDR_SIZE + SREC_CHECKSUM_SIZE; 
     
     // Calculate Checksum for the S0 Record
     uint8_t ucHeaderChecksum = Calculate_Srec_Checksum(ucHeaderByteCount, 0, (uint8_t *)pProjectName, ucProjectNameLen);
@@ -118,20 +115,28 @@ void srec_file(const char *pInput, const char *pOutput)
     // Print the calculated SO record Checksum and Terminate Line
     fprintf(pOutputFile, "%02X\n", ucHeaderChecksum);
 
-    // 2. Write Data Records (S3 for 32-bit addresses)
+    /* SREC Data Record: S3 (32 bit addressing )*/ 
+    uint8_t ucBuffer[SREC_DATA_PER_LINE] = {0};
+    size_t bytesRead;
+    uint32_t ulAddress = SREC_DATA_RECORD_ADDR;
+
     while ((bytesRead = fread(ucBuffer, 1, sizeof(ucBuffer), pInputFile)) > 0) 
     {
-        // Count = Address(4 bytes) + Data(N bytes) + Checksum(1 byte)
-        uint8_t ucCount = (uint8_t)(4 + bytesRead + 1);
-        uint8_t ucChecksum = Calculate_Srec_Checksum(ucCount, ulAddress, ucBuffer, bytesRead);
+        // Caculate DataRecordByteCount = Address(4 bytes) + Data(N bytes) + Checksum(1 byte)
+        uint8_t ucDataRecordByteCount = (uint8_t)(SREC_DATA_RECORD_ADDR_SIZE + bytesRead + SREC_CHECKSUM_SIZE);
+        
+        // Calculate Checksum for the S3 Record
+        uint8_t ucDataChecksum = Calculate_Srec_Checksum(ucDataRecordByteCount, ulAddress, ucBuffer, bytesRead);
 
-        // Format: S3 [Count] [Address] [Data] [Checksum]
-        fprintf(pOutputFile, "S3%02X%08X", ucCount, ulAddress);
-        for (size_t i = 0; i < bytesRead; i++) {
+        // Format: S3 [ Byte Count] [4 byte Address] [Data] [Checksum]
+        fprintf(pOutputFile, "%s%02X%08X", SREC_DATA_RECORD_TYPE, ucDataRecordByteCount, ulAddress);
+        for (size_t i = 0; i < bytesRead; i++) 
+        {
             fprintf(pOutputFile, "%02X", ucBuffer[i]);
         }
-        fprintf(pOutputFile, "%02X\n", ucChecksum);
+        fprintf(pOutputFile, "%02X\n", ucDataChecksum);
 
+        //Increment the address for the next line
         ulAddress += bytesRead;
     }
     fprintf(pOutputFile, "S70500000000FA\n");

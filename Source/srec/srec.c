@@ -155,6 +155,7 @@ void srec_file(const char *pInput, const char *pOutput)
 
     /* SREC  Record: S5/S6      */ 
     uint8_t ucCountRecordByteCount = 0;
+   
     if(ulRecordCounter <= 0xFFFF)
     {
         ucCountRecordByteCount = SREC_S5_RECORD_SIZE + SREC_CHECKSUM_SIZE;

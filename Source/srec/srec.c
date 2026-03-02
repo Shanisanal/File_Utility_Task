@@ -35,6 +35,8 @@
 #define SREC_S5_RECORD_SIZE          2
 #define SREC_S6_RECORD_SIZE          3
 
+#define SREC_TERMINATION_RECORD     "S7"
+
 #define SREC_CHECKSUM_SIZE           1
 
 //***************************** Local Variables ******************************* 
@@ -167,7 +169,12 @@ void srec_file(const char *pInput, const char *pOutput)
         fprintf(pOutputFile, "%s%02X%06X%02X\n", SREC_COUNT_RECORD_S6, ucCountRecordByteCount, ulRecordCounter, ucS6Checksum);
     }
 
-    fprintf(pOutputFile, "S70500000000FA\n");
+    /* SREC Termination Record (S7): 32-bit Entry Point */
+    uint8_t ucTerminationByteCount = SREC_DATA_RECORD_ADDR_SIZE + SREC_CHECKSUM_SIZE;
+    uint8_t ucTerminationChecksum = Calculate_Srec_Checksum(ucTerminationByteCount, SREC_DATA_RECORD_ADDR, NULL, 0);
+
+    // Termination record [Type] [Byte Count] [Start Address] [Checksum]
+    fprintf(pOutputFile, "%s%02X%08X%02X\n", SREC_TERMINATION_RECORD, ucTerminationByteCount, SREC_DATA_RECORD_ADDR, ucTerminationChecksum);
 
     fclose(pInputFile);
     fclose(pOutputFile);

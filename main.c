@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include "Include/gzip/gzip.h"
 #include "Include/hexdump/hexdump.h"
+#include "Include/srec/srec.h"
 
 //******************************* Local Types ********************************* 
  

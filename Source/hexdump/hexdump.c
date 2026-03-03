@@ -15,7 +15,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <ctype.h>
-#include "Include/Common/utility.h"
+#include "Common/utility.h"
 
 //******************************* Local Types ********************************* 
  
@@ -42,8 +42,8 @@ bool HexdumpConvert(uint8_t* pucInput, uint8_t* pucOutput)
     uint32_t ulBytesRead = 0;
     uint32_t ulOffset = 0;
     
-    FILE *pInputFile = fopen(pucInput, FILE_MODE_READ_BINARY);
-    FILE *pOutputFile = fopen(pucOutput, FILE_MODE_WRITE_TEXT);
+    FILE *pInputFile = fopen((const char*)pucInput, FILE_MODE_READ_BINARY);
+    FILE *pOutputFile = fopen((const char*)pucOutput, FILE_MODE_WRITE_TEXT);
 
     if (pInputFile == NULL) 
     { 
@@ -79,7 +79,7 @@ bool HexdumpConvert(uint8_t* pucInput, uint8_t* pucOutput)
             }
         }
 
-        fprintf(pOutputFile, "%08lx  ", ulOffset);
+        fprintf(pOutputFile, "%08x  ", ulOffset);
 
         for (uint32_t ulIndex = 0; ulIndex < HEXDUMP_BYTES_PER_LINE; ulIndex++) 
         {

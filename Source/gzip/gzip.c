@@ -16,13 +16,11 @@
 #include <zlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include "Include/Common/utility.h"
 
 //******************************* Local Types ********************************* 
  
 //***************************** Local Constants ******************************* 
-#define FILE_MODE_READ_BINARY  "rb"
-#define FILE_MODE_WRITE_BINARY "wb"
-
 #define GZIP_BUFFER_SIZE       4096
 
 //***************************** Local Variables ******************************* 

@@ -15,6 +15,9 @@
 #define GZIP_H
 
 //******************************* Include Files ******************************* 
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
 
 //******************************* Global Types ******************************** 
  
@@ -24,7 +27,7 @@
  
 //**************************** Forward Declarations *************************** 
 
-void gzip_file(const char *Input, const char *Output);
+bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput);
 
 //***************************** Class Declaration ***************************** 
  

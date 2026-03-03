@@ -16,7 +16,8 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
-#include "Include/Common/utility.h"
+#include "Common/utility.h"
+#include "srec/srec.h"
 
 //******************************* Local Types ********************************* 
  
@@ -89,8 +90,8 @@ bool SrecConvert(uint8_t* pucInput, uint8_t* pucOutput)
     bool blSuccess = false;
     uint32_t ulRecordCounter = 0;
 
-    FILE *pInputFile = fopen(pucInput, FILE_MODE_READ_BINARY);
-    FILE *pOutputFile = fopen(pucOutput, FILE_MODE_WRITE_TEXT);
+    FILE *pInputFile = fopen((const char*)pucInput, FILE_MODE_READ_BINARY);
+    FILE *pOutputFile = fopen((const char*)pucOutput, FILE_MODE_WRITE_TEXT);
 
     if (pInputFile == NULL) 
     { 
@@ -160,23 +161,22 @@ bool SrecConvert(uint8_t* pucInput, uint8_t* pucOutput)
 bool WriteSrecHeaderRecord(FILE *pOutputFile)
 {
     bool blHeaderSuccess = false;
-    const char *pProjectName = PROJECT_NAME;
+    const char* pProjectName = PROJECT_NAME;
     uint8_t ucHeaderChecksum = 0;
     uint8_t ucProjectNameLen = (uint8_t)strlen(pProjectName);
+    uint8_t ucHederByteCount = ucProjectNameLen + SREC_CHECKSUM_SIZE + SREC_HEADER_ADDR_SIZE;
 
     // Write S0 record header
-    fprintf(pOutputFile, "%s%02X", SREC_HEADER_RECORD_TYPE, ucProjectNameLen + SREC_CHECKSUM_SIZE);
+    fprintf(pOutputFile, "%s%02X", SREC_HEADER_RECORD_TYPE, ucHederByteCount);
+    fprintf(pOutputFile, "%04X", SREC_HEADER_ADDR);
 
-    // Write project name in hex
     for (uint8_t iIndex = 0; iIndex < ucProjectNameLen; iIndex++) 
     {
         fprintf(pOutputFile, "%02X", (uint8_t)pProjectName[iIndex]);
     }
 
-    // Calculate and write checksum for the header record
-    ucHeaderChecksum = Calculate_Srec_Checksum(ucProjectNameLen + SREC_CHECKSUM_SIZE, 0, (uint8_t*)pProjectName, ucProjectNameLen);
+    ucHeaderChecksum = CalculateSrecChecksum(ucHederByteCount, 0, (uint8_t*)pProjectName, ucProjectNameLen);
     fprintf(pOutputFile, "%02X\n", ucHeaderChecksum);
-
     blHeaderSuccess = true;
     return blHeaderSuccess;
 }
@@ -226,7 +226,7 @@ bool WriteSrecDataRecord(FILE* pInputFile, FILE* pOutputFile, uint32_t* pulRecor
 
         // Caculate DataRecordByteCount = Address(4 bytes) + Data(N bytes) + Checksum(1 byte)
         ucDataRecordByteCount = (uint8_t)(SREC_DATA_RECORD_ADDR_SIZE + ulBytesRead + SREC_CHECKSUM_SIZE);
-        ucDataChecksum = Calculate_Srec_Checksum(ucDataRecordByteCount, ulAddress, ucBuffer, ulBytesRead);
+        ucDataChecksum = CalculateSrecChecksum(ucDataRecordByteCount, ulAddress, ucBuffer, ulBytesRead);
 
         // Format: S3 [ Byte Count] [4 byte Address] [Data] [Checksum]
         fprintf(pOutputFile, "%s%02X%08X", SREC_DATA_RECORD_TYPE, ucDataRecordByteCount, ulAddress);
@@ -271,13 +271,13 @@ bool WriteSrecCountRecord(FILE* pOutputFile, uint32_t ulRecordCount)
     if(ulRecordCount <= SREC_S5_MAX_COUNT)
     {
         ucCountRecordByteCount = SREC_S5_RECORD_SIZE + SREC_CHECKSUM_SIZE;
-        ucChecksum = Calculate_Srec_Checksum(ucCountRecordByteCount, ulRecordCount, NULL, 0);
+        ucChecksum = CalculateSrecChecksum(ucCountRecordByteCount, ulRecordCount, NULL, 0);
         fprintf(pOutputFile, "%s%02X%04X%02X\n", SREC_COUNT_RECORD_S5, ucCountRecordByteCount, (uint16_t)ulRecordCount, ucChecksum);
     }
     else if(ulRecordCount <= SREC_S6_MAX_COUNT)
     {
         ucCountRecordByteCount = SREC_S6_RECORD_SIZE + SREC_CHECKSUM_SIZE;
-        ucChecksum = Calculate_Srec_Checksum(ucCountRecordByteCount, ulRecordCount, NULL, 0);
+        ucChecksum = CalculateSrecChecksum(ucCountRecordByteCount, ulRecordCount, NULL, 0);
         fprintf(pOutputFile, "%s%02X%06X%02X\n", SREC_COUNT_RECORD_S6, ucCountRecordByteCount, ulRecordCount, ucChecksum);
     }
     else

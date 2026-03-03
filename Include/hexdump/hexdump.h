@@ -22,7 +22,7 @@
 //***************************** Global Variables ****************************** 
  
 //**************************** Forward Declarations *************************** 
-void Hexdump_file(const char *pInput, const char *pOutput) ;
+bool HexdumpConvert(uint8_t* pucInput, uint8_t* pucOutput) ;
 
 //*********************** Inline Method Implementations *********************** 
 

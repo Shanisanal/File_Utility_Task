@@ -15,6 +15,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <ctype.h>
+#include "Include/Common/utility.h"
 
 //******************************* Local Types ********************************* 
  
@@ -25,48 +26,66 @@
  
 //****************************** Local Functions ******************************
 
-//****************************** Hexdump_file ******************************
+//****************************** HexdumpConvert ******************************
 // Purpose : Generates a hexadecimal dump of the input file and writes the formatted output (hex values + ASCII equivalents) to
 //           the specified output file.
-// Inputs  : pInput  - path to the input file 
-//           pOutput - path to the output file 
+// Inputs  : pucInput  - path to the input file 
+//           pucOutput - path to the output file 
 // Outputs : Creates a text file containing the hexdump at the given output path.
-// Return  : None
+// Return  : bool - Returns true if the hexdump was successfully generated and written to the output file, false otherwise.
 // Notes   : None
 //*****************************************************************************
-void Hexdump_file(const char *pInput, const char *pOutput) 
+bool HexdumpConvert(uint8_t* pucInput, uint8_t* pucOutput) 
 {
-    FILE *pInputFile = fopen(pInput, "rb");
+    bool blSuccess = false;
+    uint8_t ucbuffer[HEXDUMP_BYTES_PER_LINE] = {0};    
+    uint32_t ulBytesRead = 0;
+    uint32_t ulOffset = 0;
+    
+    FILE *pInputFile = fopen(pucInput, FILE_MODE_READ_BINARY);
+    FILE *pOutputFile = fopen(pucOutput, FILE_MODE_WRITE_TEXT);
 
-    FILE *pOutputFile = fopen(pOutput, "w");
-
-    if (!pInputFile || !pOutputFile) 
-    {
-        perror("File open failed");
-        if (pInputFile) 
-        {
-            fclose(pInputFile);
-        }
-        if (pOutputFile) 
-        {
-            fclose(pOutputFile);
-        } 
-        return;
+    if (pInputFile == NULL) 
+    { 
+        perror("Error opening input file"); 
+        blSuccess = false;
+        return blSuccess; 
+    }
+ 
+    if (pOutputFile == NULL) 
+    { 
+        fclose(pInputFile); 
+        blSuccess = false;
+        return blSuccess; 
     }
 
-    uint8_t ucbuffer[HEXDUMP_BYTES_PER_LINE] = {0};    
-    size_t bytesRead;
-    size_t offset = 0;
-
-    while ((bytesRead = fread(ucbuffer, 1, sizeof(ucbuffer), pInputFile)) > 0) 
+    while(true)
     {
-        fprintf(pOutputFile, "%08lx  ", offset);
+        ulBytesRead = fread(ucbuffer, 1, sizeof(ucbuffer), pInputFile);
 
-        for (size_t Index = 0; Index < HEXDUMP_BYTES_PER_LINE; Index++) 
+        if (ulBytesRead == 0) 
         {
-            if (Index < bytesRead)
+            if (feof(pInputFile)) 
             {
-               fprintf(pOutputFile, "%02x ", ucbuffer[Index]);
+                break; 
+            } 
+            else 
+            {
+                perror("Error reading input file");
+                fclose(pInputFile);
+                fclose(pOutputFile);
+                blSuccess = false;
+                return blSuccess;
+            }
+        }
+
+        fprintf(pOutputFile, "%08lx  ", ulOffset);
+
+        for (uint32_t ulIndex = 0; ulIndex < HEXDUMP_BYTES_PER_LINE; ulIndex++) 
+        {
+            if (ulIndex < ulBytesRead)
+            {
+               fprintf(pOutputFile, "%02x ", ucbuffer[ulIndex]);
             }
             else
             {
@@ -74,20 +93,21 @@ void Hexdump_file(const char *pInput, const char *pOutput)
             }
         }
 
-        // Write ASCII equivalents
         fprintf(pOutputFile, " |");
-        for (uint16_t unIndex = 0; unIndex < bytesRead; unIndex++) 
-        {
-            fprintf(pOutputFile, "%c", isprint(ucbuffer[unIndex]) ? ucbuffer[unIndex] : '.');
-        }
-        fprintf(pOutputFile, "|\n");
 
-        offset += bytesRead;
+        for (uint32_t ulIndex = 0; ulIndex < ulBytesRead; ulIndex++) 
+        {
+            fprintf(pOutputFile, "%c", isprint(ucbuffer[ulIndex]) ? ucbuffer[ulIndex] : '.');
+        }
+
+        fprintf(pOutputFile, "|\n");
+        ulOffset += ulBytesRead;
     }
 
     fclose(pInputFile);
     fclose(pOutputFile);
+    blSuccess = true;
+    return blSuccess;
 }
-
 
 //EOF

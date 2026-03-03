@@ -12,16 +12,22 @@
 //***************************************************************************** 
  
 //******************************* Include Files ******************************* 
-
 #include <stdio.h> 
 #include <zlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 //******************************* Local Types ********************************* 
  
 //***************************** Local Constants ******************************* 
+#define FILE_MODE_READ_BINARY  "rb"
+#define FILE_MODE_WRITE_BINARY "wb"
 
-//****************************** gzip_file ******************************
+#define GZIP_BUFFER_SIZE       4096
+
+//***************************** Local Variables ******************************* 
+
+//****************************** GzipConvert ******************************
 // Purpose : Compresses an input file using the gzip format and writes
 //           the compressed data to the specified output file.
 // Inputs  : pInput  - path to the input file (const char*)
@@ -35,40 +41,66 @@
 //   - Handles errors .
 //   - Ensures proper cleanup by closing both input and output files.
 //*****************************************************************************
-void gzip_file(const char *pInput, const char *pOutput)
+bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
 {
-    FILE *Input_file = fopen(pInput, "rb");
-    if (!Input_file) 
+    bool blSuccess = false;
+    gzFile pstOutput_file = NULL;
+    uint8_t ucBuffer[GZIP_BUFFER_SIZE] = {0};
+    uint32_t  ulBytesRead = 0;
+
+    FILE* pInput_file  = fopen(pucInput, FILE_MODE_READ_BINARY);
+    pstOutput_file = gzopen(pucOutput, FILE_MODE_WRITE_BINARY);
+
+    if (pInput_file == NULL) 
     { 
         perror("Error opening input file"); 
-        return; 
+        blSuccess = false;
+        return blSuccess; 
     }
-
-    gzFile Output_file = gzopen(pOutput, "wb");
-    if (!Output_file) 
+ 
+    if (pstOutput_file == NULL) 
     { 
-        fprintf(stderr, "Error: could not open output file '%s' for gzip compression\n", pOutput);       
-        fclose(Input_file); 
-        return; 
+        fprintf(stderr, "Error: could not open output file '%s' for gzip compression\n", pucOutput);       
+        fclose(pInput_file); 
+        blSuccess = false;
+        return blSuccess; 
     }
 
-    uint8_t ucBuffer[4096];
-    size_t bytes_read;
-
-    while ((bytes_read = fread(ucBuffer, 1, sizeof(ucBuffer), Input_file)) > 0) 
+    while(true)
     {
-        if (gzwrite(Output_file, ucBuffer, bytes_read) != (int)bytes_read)
+        ulBytesRead = fread(ucBuffer, 1, sizeof(ucBuffer), pInput_file);
+        if (ulBytesRead == 0) 
+        {
+        
+            if (feof(pInput_file)) 
+            {
+                break; 
+            } 
+            else 
+            {
+                perror("Error reading input file");
+                fclose(pInput_file);
+                gzclose(pstOutput_file);
+                blSuccess = false;
+                return blSuccess;
+            }
+        }
+    
+        if (gzwrite(pstOutput_file, ucBuffer, ulBytesRead) != ulBytesRead)
         {
             perror("Error writing compressed data");
-            fclose(Input_file);
-            gzclose(Output_file);
-            return;
+            fclose(pInput_file);
+            gzclose(pstOutput_file);
+            blSuccess = false;
+            return blSuccess;
         }
     }
 
-    fclose(Input_file);
-    gzclose(Output_file);
+    fclose(pInput_file);
+    gzclose(pstOutput_file);
+    blSuccess = true;
 
+    return blSuccess;
 }
 
 //EOF

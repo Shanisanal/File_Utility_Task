@@ -16,8 +16,11 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
-#include "Include/Common/utility.h"
 #include "stdbool.h"
+#include "Common/utility.h"
+#include "gzip/gzip.h"
+#include "hexdump/hexdump.h"
+#include "srec/srec.h"
 
 //******************************* Local Types ********************************* 
  

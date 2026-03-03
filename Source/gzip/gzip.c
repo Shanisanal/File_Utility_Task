@@ -16,7 +16,7 @@
 #include <zlib.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "Include/Common/utility.h"
+#include "Common/utility.h"
 
 //******************************* Local Types ********************************* 
  
@@ -42,12 +42,12 @@
 bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
 {
     bool blSuccess = false;
-    gzFile pstOutput_file = NULL;
+    gzFile pstOutput_file;
     uint8_t ucBuffer[GZIP_BUFFER_SIZE] = {0};
     uint32_t  ulBytesRead = 0;
 
-    FILE* pInput_file  = fopen(pucInput, FILE_MODE_READ_BINARY);
-    pstOutput_file = gzopen(pucOutput, FILE_MODE_WRITE_BINARY);
+    FILE* pInput_file  = fopen((const char *)pucInput, FILE_MODE_READ_BINARY);
+    pstOutput_file = gzopen((const char *)pucOutput, FILE_MODE_WRITE_BINARY);
 
     if (pInput_file == NULL) 
     { 
@@ -84,7 +84,7 @@ bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
             }
         }
     
-        if (gzwrite(pstOutput_file, ucBuffer, ulBytesRead) != ulBytesRead)
+        if (gzwrite(pstOutput_file, ucBuffer, ulBytesRead) != (int)ulBytesRead)
         {
             perror("Error writing compressed data");
             fclose(pInput_file);

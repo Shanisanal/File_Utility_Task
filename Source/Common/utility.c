@@ -16,62 +16,67 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#include "Include/Common/utility.h"
+#include "stdbool.h"
 
 //******************************* Local Types ********************************* 
  
 //***************************** Local Constants ******************************* 
+#define ARG_TYPE_FLAG           "-t"
+#define ARG_INPUT_FLAG          "-i"
+#define ARG_OUTPUT_FLAG         "-o"
+
+#define ARG_TYPE_GZIP           "gzip"
+#define ARG_TYPE_HEXDUMP        "hexdump"
+#define ARG_TYPE_SREC           "srec"
 
 //***************************** Local Variables ******************************* 
- typedef struct 
- { 
-    uint8_t  *pType; 
-    uint8_t  *pInput; 
-    uint8_t  *pOutput; 
-} ARGUMENTS; 
+
 //****************************** Local Functions ******************************/
 
 //****************************** ParseArguments ******************************
 // Purpose : Extracts command-line arguments and stores them in an ARGUMENTS structure .
-// Inputs  : unArgc  - total number of command-line arguments
-//           pArgv[] - array of argument strings
-// Outputs : ARGUMENTS structure containing parsed values:
-//              pType   - gzip / hexdump / srec
-//              pInput  - input filename
-//              pOutput - output filename 
-// Return  : ARGUMENTS - populated structure with parsed arguments
+// Inputs  : unArgCount - total number of command-line arguments
+//           pArgv[]    - array of argument strings
+//           pArgs      - pointer to ARGUMENTS structure
+// Outputs : None
+// Return  : bool - populated structure with parsed arguments
 // Notes   : 
 //   - Recognizes flags: -t <type>, -i <input>, -o <output>
 //   - If a flag is missing, the corresponding field remains NULL.
 //   - Caller must validate that required arguments are present before use.
 //*****************************************************************************
 
-ARGUMENTS ParseArguments(uint16_t unArgc, uint8_t *pArgv[]) 
+bool ParseArguments(uint16_t unArgCount, uint8_t *pucArgv[], ARGUMENTS* pstArguments) 
 {
-    ARGUMENTS args = {0};
+    bool blTypeFound = false;
 
-    for (uint16_t unIndex = 1; unIndex < unArgc; unIndex++) 
+    for (uint16_t unIndex = 1; unIndex < unArgCount; unIndex++) 
     {
-        if (strcmp((char *)pArgv[unIndex], "-t") == 0 && (unIndex + 1 < unArgc)) 
+        if (strcmp((char *)pucArgv[unIndex], ARG_TYPE_FLAG) == 0 && (unIndex + 1 < unArgCount)) 
         {
-            args.pType = pArgv[unIndex + 1];
+            pstArguments->pucArgumentType = pucArgv[unIndex + 1];
+            blTypeFound = true;
         } 
-        else if (strcmp((char *)pArgv[unIndex], "-i") == 0 && (unIndex + 1 < unArgc)) 
+        else if (strcmp((char *)pucArgv[unIndex], ARG_INPUT_FLAG) == 0 && (unIndex + 1 < unArgCount)) 
         {
-            args.pInput = pArgv[unIndex + 1];
-        } 
-        else if (strcmp((char *)pArgv[unIndex], "-o") == 0 && (unIndex + 1 < unArgc)) 
+            pstArguments->pucInputFileName = pucArgv[unIndex + 1];
+            blTypeFound = true;
+       } 
+        else if (strcmp((char *)pucArgv[unIndex], ARG_OUTPUT_FLAG) == 0 && (unIndex + 1 < unArgCount)) 
         {
-            args.pOutput = pArgv[unIndex + 1];
+            pstArguments->pucOutputFileName = pucArgv[unIndex + 1];
+            blTypeFound = true;
         }
     }
 
-    return args;
+    return blTypeFound;
 }
 
 //****************************** RunUtility ******************************
 // Purpose : Executes the file utility based on parsed arguments.Validates required parameters and calls the appropriate
 //           processing function depending on the specified type.
-// Inputs  : args - ARGUMENTS structure
+// Inputs  : pstArguments - pointer to ARGUMENTS structure
 // Outputs : Processed file written to the specified output filename, depending on the operation type.
 // Return  : None 
 // Notes   : 
@@ -79,28 +84,34 @@ ARGUMENTS ParseArguments(uint16_t unArgc, uint8_t *pArgv[])
 //   - Displays error if unsupported type is provided.
 //*****************************************************************************
 
-void RunUtility(ARGUMENTS args) 
+bool RunUtility(ARGUMENTS* pstArguments) 
 {
-    if (args.pType == NULL || args.pInput == NULL || args.pOutput == NULL) 
+    bool blConvertSuccess = false;
+
+    if (pstArguments->pucArgumentType == NULL || pstArguments->pucInputFileName == NULL || pstArguments->pucOutputFileName == NULL) 
     {
         fprintf(stderr, "Error: Missing required arguments. Usage: -t <type> -i <inputfilename> -o <outputfilename>\n");
-        return;
+        blConvertSuccess = false;
+        return blConvertSuccess;
     }
 
-    if (strcmp((char *)args.pType, "gzip") == 0) 
+    if (strcmp((char *)pstArguments->pucArgumentType, ARG_TYPE_GZIP) == 0) 
     {
-        gzip_file((char *)args.pInput, (char *)args.pOutput);
+        blConvertSuccess = GzipConvert(pstArguments->pucInputFileName, pstArguments->pucOutputFileName);
     } 
-    else if (strcmp((char *)args.pType, "hexdump") == 0) 
+    else if (strcmp((char *)pstArguments->pucArgumentType, ARG_TYPE_HEXDUMP) == 0) 
     {
-        Hexdump_file((char *)args.pInput, (char *)args.pOutput);
+        blConvertSuccess = HexdumpConvert(pstArguments->pucInputFileName, pstArguments->pucOutputFileName);
     } 
-    else if (strcmp((char *)args.pType, "srec") == 0) 
+    else if (strcmp((char *)pstArguments->pucArgumentType, ARG_TYPE_SREC) == 0) 
     {
-        srec_file((char *)args.pInput, (char *)args.pOutput);
+        blConvertSuccess = SrecConvert(pstArguments->pucInputFileName, pstArguments->pucOutputFileName);
     } 
     else 
     {
         fprintf(stderr, "Error: Unsupported type . Only 'gzip' 'hexdump' and 'srec' is supported.\n");
+        blConvertSuccess = false;
     }
+    
+    return blConvertSuccess;
 }

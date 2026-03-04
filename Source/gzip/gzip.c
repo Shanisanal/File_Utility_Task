@@ -42,9 +42,15 @@
 bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
 {
     bool blSuccess = false;
-    gzFile pstOutput_file;
+    gzFile pstOutput_file = NULL;
     uint8_t ucBuffer[GZIP_BUFFER_SIZE] = {0};
     uint32_t  ulBytesRead = 0;
+
+    if(pucInput == NULL || pucOutput == NULL) 
+    {
+        fprintf(stderr, "Error: Input and output file paths NULL.\n");
+        return blSuccess;
+    }
 
     FILE* pInput_file  = fopen((const char *)pucInput, FILE_MODE_READ_BINARY);
     pstOutput_file = gzopen((const char *)pucOutput, FILE_MODE_WRITE_BINARY);
@@ -66,7 +72,7 @@ bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
 
     while(true)
     {
-        ulBytesRead = fread(ucBuffer, 1, sizeof(ucBuffer), pInput_file);
+        ulBytesRead = fread(ucBuffer, BYTE_SIZE, sizeof(ucBuffer), pInput_file);
         if (ulBytesRead == 0) 
         {
         

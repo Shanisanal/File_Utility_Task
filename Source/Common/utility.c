@@ -37,11 +37,11 @@
 
 #define CONVERTER_COUNT (sizeof(sstConversionMap) / sizeof(sstConversionMap[0]))
 //***************************** Local Variables ******************************* 
-typedef bool (*pfnFileConverter)(const uint8_t* pucInput, uint8_t* pucOutput);
+typedef bool (*pfnFileConverter)(uint8_t* pucInput, uint8_t* pucOutput);
 
 typedef struct _CONVERSION_MAP_
  { 
-    uint8_t*  pucConversionType; 
+    const char*  pcConversionType; 
     pfnFileConverter pfnFileConverter;
 } CONVERSION_MAP;
 

@@ -1,4 +1,4 @@
-//****************************** File_Utility_Task  *************************************
+//************************** File_Utility_Task  ********************************
 // Copyright (c) 2026 Trenser Technology Solutions
 // All Rights Reserved
 //*****************************************************************************
@@ -36,7 +36,8 @@
 } ARGUMENTS; 
 
 //**************************** Forward Declarations *************************** 
-bool ParseArguments(uint16_t unArgCount, char* pcArgv[], ARGUMENTS* pstArguments) ;
+bool ExecuteApplication(int lArgCount, char* pcArgv[]);
+bool ParseArguments(uint16_t unArgCount, char* pcArgv[],ARGUMENTS* pstArguments);
 bool RunUtility(ARGUMENTS* pstArguments) ;
 
 //*********************** Inline Method Implementations *********************** 

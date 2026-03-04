@@ -66,7 +66,7 @@ bool HexdumpConvert(uint8_t* pucInput, uint8_t* pucOutput)
         return blSuccess; 
     }
 
-    blSuccess = HexdumpDataCompre(pInputFile, pOutputFile);
+    blSuccess = HexdumpDataWrite(pInputFile, pOutputFile);
 
     if(blSuccess == false) 
     {

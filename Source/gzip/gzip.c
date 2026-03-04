@@ -52,7 +52,7 @@ bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
 
     if (pInput_file == NULL) 
     { 
-        perror("Error opening input file"); 
+        fprintf(stderr, "Error opening input file.\n"); 
         blSuccess = false;
         return blSuccess; 
     }
@@ -70,14 +70,13 @@ bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
         ulBytesRead = fread(ucBuffer, BYTE_SIZE, sizeof(ucBuffer), pInput_file);
         if (ulBytesRead == 0) 
         {
-        
             if (feof(pInput_file)) 
             {
                 break; 
             } 
             else 
             {
-                perror("Error reading input file");
+                fprintf(stderr, "Error reading input file.\n");
                 fclose(pInput_file);
                 gzclose(pstOutput_file);
                 blSuccess = false;

@@ -27,18 +27,19 @@
 //****************************** Local Functions ******************************
 
 //****************************** HexdumpConvert ******************************
-// Purpose : Generates a hexadecimal dump of the input file and writes the formatted output (hex values + ASCII equivalents) to
-//           the specified output file.
+// Purpose : Generates a hexadecimal dump of the input file and writes the 
+//           formatted output(hex values + ASCII equivalents) to the output file.
 // Inputs  : pucInput  - path to the input file 
 //           pucOutput - path to the output file 
 // Outputs : None
-// Return  : bool - Returns true if the hexdump was successfully generated and written to the output file, false otherwise.
+// Return  : bool - Returns true if the hexdump was successfully generated and 
+//           written to the output file, false otherwise.
 // Notes   : None
 //*****************************************************************************
 bool HexdumpConvert(uint8_t* pucInput, uint8_t* pucOutput) 
 {
     bool blSuccess = false;
-    uint8_t ucbuffer[HEXDUMP_BYTES_PER_LINE] = {0};    
+    uint8_t ucbuffer[HEXDUMP_BYTES_PER_LINE] = {0};
     uint32_t ulBytesRead = 0;
     uint32_t ulOffset = 0;
     FILE* pInputFile = NULL;
@@ -105,7 +106,8 @@ bool HexdumpConvert(uint8_t* pucInput, uint8_t* pucOutput)
 
         for (uint32_t ulIndex = 0; ulIndex < ulBytesRead; ulIndex++) 
         {
-            fprintf(pOutputFile, "%c", isprint(ucbuffer[ulIndex]) ? ucbuffer[ulIndex] : '.');
+            fprintf(pOutputFile, "%c", 
+                    isprint(ucbuffer[ulIndex]) ? ucbuffer[ulIndex] : '.');
         }
 
         fprintf(pOutputFile, "|\n");

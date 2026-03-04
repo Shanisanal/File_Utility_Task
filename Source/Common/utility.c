@@ -37,12 +37,12 @@
 
 #define CONVERTER_COUNT (sizeof(sstConversionMap) / sizeof(sstConversionMap[0]))
 //***************************** Local Variables ******************************* 
-typedef bool (*pfnFileConverter)(uint8_t* pucInput, uint8_t* pucOutput);
+typedef bool (*pFileConverter)(uint8_t* pucInput, uint8_t* pucOutput);
 
 typedef struct _CONVERSION_MAP_
  { 
     const char*  pcConversionType; 
-    pfnFileConverter pfnFileConverter;
+    pFileConverter pfnFileConverter;
 } CONVERSION_MAP;
 
 static const CONVERSION_MAP sstConversionMap[] = 
@@ -52,7 +52,16 @@ static const CONVERSION_MAP sstConversionMap[] =
     {ARG_TYPE_SREC, SrecConvert}
 };
 
+typedef enum 
+{
+    ARG_INVALID = 0,
+    ARG_TYPE,
+    ARG_INPUT_FILENAME,
+    ARG_OUTPUT_FILENAME
+} ARG_FLAG;
 //****************************** Local Functions ******************************/
+static ARG_FLAG GetArgumentFlag(const char* pcArg) ;
+
 //****************************** ExecuteApplication ***************************
 // Purpose : Manages the application lifecycle from parsing to execution.
 // Inputs  : lArgCount  - total number of command-line arguments
@@ -109,7 +118,6 @@ bool ExecuteApplication(int lArgCount, char* pcArgv[])
 //   - If a flag is missing, the corresponding field remains NULL.
 //   - Caller must validate that required arguments are present before use.
 //*****************************************************************************
-
 bool ParseArguments(uint16_t unArgCount, char* pcArgv[],ARGUMENTS* pstArguments) 
 {
     bool blTypeFound = false;
@@ -121,26 +129,70 @@ bool ParseArguments(uint16_t unArgCount, char* pcArgv[],ARGUMENTS* pstArguments)
 
     for (uint16_t unIndex = 1; unIndex < unArgCount; unIndex++) 
     {
-        if (strcmp((char *)pcArgv[unIndex], ARG_TYPE_FLAG) == 0 && (unIndex + 1 < unArgCount)) 
+        if(unIndex + 1 > unArgCount) 
         {
-            pstArguments->pucArgumentType = (uint8_t *)pcArgv[unIndex + 1];
-            blTypeFound = true;
-        } 
-        else if (strcmp((char *)pcArgv[unIndex], ARG_INPUT_FLAG) == 0 && (unIndex + 1 < unArgCount)) 
+            fprintf(stderr, "Error: Missing value for argument %s\n", pcArgv[unIndex]);
+            break;
+        }
+        ARG_FLAG eFlag = GetArgumentFlag(pcArgv[unIndex]);
+
+        switch (eFlag) 
         {
-            pstArguments->pucInputFileName = (uint8_t *)pcArgv[unIndex + 1];
-            blTypeFound = true;
-       } 
-        else if (strcmp((char *)pcArgv[unIndex], ARG_OUTPUT_FLAG) == 0 && (unIndex + 1 < unArgCount)) 
-        {
-            pstArguments->pucOutputFileName = (uint8_t *)pcArgv[unIndex + 1];
-            blTypeFound = true;
+            case ARG_TYPE:
+            {
+                pstArguments->pucArgumentType = (uint8_t*)pcArgv[unIndex + 1];
+                blTypeFound = true;
+                break;
+            }
+            case ARG_INPUT_FILENAME:
+            {
+                pstArguments->pucInputFileName = (uint8_t*)pcArgv[unIndex + 1];
+                blTypeFound = true;
+                break;
+            }
+            case ARG_OUTPUT_FILENAME:
+            {
+                pstArguments->pucOutputFileName = (uint8_t*)pcArgv[unIndex + 1];
+                blTypeFound = true;
+                break;
+            }
+            default:
+                break;
         }
     }
-
     return blTypeFound;
 }
 
+//****************************** GetArgumentFlag *******************************
+// Purpose : Identifies the flag type for a given command-line argument.
+// Inputs  : pcArg - pointer to the argument string
+// Outputs : None
+// Return  : ARG_FLAG - the identified flag type
+// Notes   : 
+//   - Recognizes flags: -t <type>, -i <input>, -o <output>
+//   - Returns ARG_INVALID for unrecognized flags.
+//*****************************************************************************
+static ARG_FLAG GetArgumentFlag(const char* pcArg) 
+{
+    if (strcmp(pcArg, ARG_TYPE_FLAG) == 0) 
+    {
+        return ARG_TYPE;
+    } 
+    else if (strcmp(pcArg, ARG_INPUT_FLAG) == 0) 
+    {
+        return ARG_INPUT_FILENAME;
+    } 
+    else if (strcmp(pcArg, ARG_OUTPUT_FLAG) == 0) 
+    {
+        return ARG_OUTPUT_FILENAME;
+    } 
+    else 
+    {
+        return ARG_INVALID;
+    }
+
+    return ARG_INVALID;
+}
 //****************************** RunUtility ***********************************
 // Purpose : Executes the file utility based on parsed arguments.Validates 
 //           required parameters and calls the appropriate processing function

@@ -168,7 +168,7 @@ bool RunUtility(ARGUMENTS* pstArguments)
     for(uint32_t ulIndex = 0; ulIndex < CONVERTER_COUNT; ulIndex++) 
     {
         if (strcmp((char *)pstArguments->pucArgumentType, 
-                   (char *)sstConversionMap[ulIndex].pucConversionType) == 0) 
+                   (char *)sstConversionMap[ulIndex].pcConversionType) == 0) 
         {
             blConvertSuccess = sstConversionMap[ulIndex].pfnFileConverter(
                                            pstArguments->pucInputFileName, 

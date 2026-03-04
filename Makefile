@@ -10,9 +10,10 @@ INC_DIR = include
 RELEASE_DIR = release
 DEBUG_DIR = debug
 
-# Source files (currently just main.c, can add more later)
+# Source files (can add more later)
 # Source files
-SRCS = main.c Source/gzip/gzip.c Source/hexdump/hexdump.c Source/srec/srec.c Source/Common/utility.c
+SRCS = main.c Source/gzip/gzip.c Source/hexdump/hexdump.c Source/srec/srec.c \
+Source/Common/utility.c
 
 # Flatten object names
 OBJS_RELEASE = $(addprefix $(RELEASE_DIR)/, $(notdir $(SRCS:.c=.o)))

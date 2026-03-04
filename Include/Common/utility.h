@@ -25,9 +25,10 @@
 #define FILE_MODE_READ_BINARY  "rb"
 #define FILE_MODE_WRITE_BINARY "wb"
 #define FILE_MODE_WRITE_TEXT   "w"
+#define BYTE_SIZE               1 
 //***************************** Global Variables ****************************** 
  
- typedef struct 
+ typedef struct _ARGUMENTS_
  { 
     uint8_t*  pucArgumentType; 
     uint8_t*  pucInputFileName; 
@@ -35,7 +36,7 @@
 } ARGUMENTS; 
 
 //**************************** Forward Declarations *************************** 
-bool ParseArguments(uint16_t unArgCount, uint8_t* pucArgv[], ARGUMENTS* pstArguments) ;
+bool ParseArguments(uint16_t unArgCount, char* pcArgv[], ARGUMENTS* pstArguments) ;
 bool RunUtility(ARGUMENTS* pstArguments) ;
 
 //*********************** Inline Method Implementations *********************** 

@@ -31,7 +31,7 @@
 // Inputs  : pInput  - path to the input file (const char*)
 //           pOutput - path to the output file (const char*)
 // Outputs : Creates a gzip-compressed file at the given output path.
-// Return  : bool - Returns true if the compression was successful, false otherwise. 
+// Return  : bool- Returns true if the compression was successful, else false. 
 // Notes   : Uses zlib's gzopen/gzwrite to perform compression.
 //*****************************************************************************
 bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
@@ -59,7 +59,8 @@ bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
  
     if (pstOutput_file == NULL) 
     { 
-        fprintf(stderr, "Error: could not open output file '%s' for gzip compression\n", pucOutput);       
+      fprintf(stderr, "Error: could not open output file '%s' "
+                      "for gzip compression\n", pucOutput) ;      
         fclose(pInput_file); 
         blSuccess = false;
         return blSuccess; 

@@ -48,7 +48,10 @@
 //***************************** Local Variables *******************************/
 
 //****************************** Local Functions ******************************/
-
+static void CloseFilesOnError(FILE* pInputFile, FILE* pOutputFile);
+static bool WriteSrecRecords(FILE* pInputFile, FILE* pOutputFile,
+                             uint32_t* pulRecordCounter);
+                             
 //************************** CalculateSrecChecksum ***************************
 // Purpose : Calculates the Motorola S-record checksum for a single record.
 // Inputs  : ucCount - The total number of bytes in the record (Address + Data +
@@ -116,49 +119,81 @@ bool SrecConvert(uint8_t* pucInput, uint8_t* pucOutput)
         blSuccess = false;
         return blSuccess;
     }
-    /* SREC Header Record: S0 */
-    if (WriteSrecHeaderRecord(pOutputFile) == false) 
+    /* SREC Record Header + Data Records + Count Records + Termination Record */
+    blSuccess = WriteSrecRecords(pInputFile, pOutputFile, &ulRecordCounter);
+
+    if (blSuccess == false) 
     {
-        fprintf(stderr, "Error writing SREC header record\n");
-        fclose(pInputFile);
-        fclose(pOutputFile);
-        blSuccess = false;
-        return blSuccess;
-    }
-    /* SREC Data Record: S3 */
-    if (WriteSrecDataRecord(pInputFile, pOutputFile, &ulRecordCounter) == false) 
-    {
-        fprintf(stderr, "Error writing SREC data records\n");
-        fclose(pInputFile);
-        fclose(pOutputFile);
-        blSuccess = false;
-        return blSuccess;
-    }
-    /* SREC  Record: S5/S6      */
-    if (WriteSrecCountRecord(pOutputFile, ulRecordCounter) == false) 
-    {
-        fprintf(stderr, "Error writing SREC count record\n");
-        fclose(pInputFile);
-        fclose(pOutputFile);
-        blSuccess = false;
-        return blSuccess;
-    }
-    /* SREC Termination Record (S7): 32-bit Entry Point */
-    if (WriteSrecTerminationRecord(pOutputFile) == false) 
-    {
-        fprintf(stderr, "Error writing SREC termination record\n");
-        fclose(pInputFile);
-        fclose(pOutputFile);
-        blSuccess = false;
+        fprintf(stderr, "Error writing SREC records.\n");
+        CloseFilesOnError(pInputFile, pOutputFile);
         return blSuccess;
     }
 
-    blSuccess = true;
-    fclose(pInputFile);
-    fclose(pOutputFile);
+    CloseFilesOnError(pInputFile, pOutputFile);
     return blSuccess;
 }
 
+//************************** CloseFilesOnError ******************************
+// Purpose : Closes input and output files and sets success flag to false.
+// Inputs  : pInputFile  - Pointer to input file to close.
+//           pOutputFile - Pointer to output file to close.
+// Outputs : None
+// Return  : None
+// Notes   : None
+//*****************************************************************************
+static void CloseFilesOnError(FILE* pInputFile, FILE* pOutputFile)
+{
+    fclose(pInputFile);
+    fclose(pOutputFile);
+}
+//************************** WriteSrecRecords ********************************
+// Purpose : Writes all SREC records (Header, Data, Count, Termination).
+// Inputs  : pInputFile     - Pointer to input binary file.
+//           pOutputFile    - Pointer to output SREC file.
+//           pulRecordCounter - Pointer to record counter.
+// Outputs : pOutputFile - Updated with all SREC records.
+// Return  : bool - true if all records written successfully, false otherwise.
+// Notes   : None
+//*****************************************************************************
+static bool WriteSrecRecords(FILE* pInputFile, FILE* pOutputFile,
+                             uint32_t* pulRecordCounter)
+{
+    bool blSrecHeaderSuccess = false;
+    bool blSrecDataSuccess = false;
+    bool blSrecCountSuccess = false;
+    bool blSrecTerminationSuccess = false;
+
+    blSrecHeaderSuccess = WriteSrecHeaderRecord(pOutputFile);
+    if (blSrecHeaderSuccess == false) 
+    {
+        fprintf(stderr, "Error writing SREC header record\n");
+        return false;   
+    }
+
+    blSrecDataSuccess = WriteSrecDataRecord(pInputFile, pOutputFile,
+                                             pulRecordCounter);
+    if (blSrecDataSuccess == false) 
+    {
+        fprintf(stderr, "Error writing SREC data records\n");
+        return false;   
+    }
+
+    blSrecCountSuccess = WriteSrecCountRecord(pOutputFile, *pulRecordCounter);
+    if (blSrecCountSuccess == false) 
+    {
+        fprintf(stderr, "Error writing SREC count record\n");
+        return false;   
+    }
+
+    blSrecTerminationSuccess = WriteSrecTerminationRecord(pOutputFile);
+    if (blSrecTerminationSuccess == false) 
+    {   
+        fprintf(stderr, "Error writing SREC termination record\n");
+        return false;   
+    }    
+    return true;
+
+}
 //****************************** WriteSrecHeader ******************************
 // Purpose : Formats and writes the Motorola S-Record S0 (Header) record
 //           to the output file using the defined project name.
@@ -227,7 +262,6 @@ bool WriteSrecDataRecord(FILE* pInputFile, FILE* pOutputFile,
         fprintf(stderr, "Invalid parameters for WriteSrecDataRecord\n");
         return blDataRecordSuccess;
     }
-
     while (true) 
     {
         ulBytesRead = fread(ucBuffer, 1, sizeof(ucBuffer), pInputFile);
@@ -244,8 +278,7 @@ bool WriteSrecDataRecord(FILE* pInputFile, FILE* pOutputFile,
                 return blDataRecordSuccess;
             }
         }
-
-        // Caculate ByteCount = Address(4 bytes) + Data(N bytes) + Checksum(1 byte)
+        //Calculate ByteCount = Address(4 bytes) + Data  + Checksum(1 byte)
         ucDataRecordByteCount = (uint8_t)(SREC_DATA_RECORD_ADDR_SIZE +
                                           ulBytesRead + SREC_CHECKSUM_SIZE);
         ucDataChecksum = CalculateSrecChecksum(ucDataRecordByteCount, ulAddress,
@@ -270,6 +303,7 @@ bool WriteSrecDataRecord(FILE* pInputFile, FILE* pOutputFile,
     blDataRecordSuccess = true;
     return blDataRecordSuccess;
 }
+
 //****************************** WriteSrecCountRecord *************************
 // Purpose : Formats and writes the Motorola S-Record count record (S5 or S6)
 //           to the output file based on the total number of data records.

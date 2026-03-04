@@ -1,4 +1,4 @@
-//****************************** File_Utility_Task  *************************************
+//*************************** File_Utility_Task  *******************************
 // Copyright (c) 2026 Trenser Technology Solutions
 // All Rights Reserved
 //*****************************************************************************
@@ -28,10 +28,12 @@
 //**************************** Forward Declarations *************************** 
 bool SrecConvert(uint8_t* pucInput, uint8_t* pucOutput) ;
 bool WriteSrecHeaderRecord(FILE* pOutputFile);
-bool WriteSrecDataRecord(FILE* pInputFile, FILE* pOutputFile, uint32_t* pulRecordCounter);
+bool WriteSrecDataRecord(FILE* pInputFile, FILE* pOutputFile, 
+                        uint32_t* pulRecordCounter);
 bool WriteSrecTerminationRecord(FILE *pOutputFile);
 bool WriteSrecCountRecord(FILE* pOutputFile, uint32_t ulRecordCount);
-uint8_t CalculateSrecChecksum(uint8_t ucCount, uint32_t ulAddr, uint8_t* pucData, uint32_t ulDataLen) ;
+uint8_t CalculateSrecChecksum(uint8_t ucCount, uint32_t ulAddr, uint8_t* pucData, 
+                              uint32_t ulDataLen) ;
 
 
 //*********************** Inline Method Implementations *********************** 

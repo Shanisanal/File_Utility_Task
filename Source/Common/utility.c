@@ -35,7 +35,22 @@
 
 #define FORMAT_MSG              "Usage: -t <type> -i <input> -o <output>\n"
 
+#define CONVERTER_COUNT (sizeof(sstConversionMap) / sizeof(sstConversionMap[0]))
 //***************************** Local Variables ******************************* 
+typedef bool (*pfnFileConverter)(const uint8_t* pucInput, uint8_t* pucOutput);
+
+typedef struct _CONVERSION_MAP_
+ { 
+    uint8_t*  pucConversionType; 
+    pfnFileConverter pfnFileConverter;
+} CONVERSION_MAP;
+
+static const CONVERSION_MAP sstConversionMap[] = 
+{
+    {ARG_TYPE_GZIP, GzipConvert},
+    {ARG_TYPE_HEXDUMP, HexdumpConvert},
+    {ARG_TYPE_SREC, SrecConvert}
+};
 
 //****************************** Local Functions ******************************/
 //****************************** ExecuteApplication ***************************
@@ -150,22 +165,16 @@ bool RunUtility(ARGUMENTS* pstArguments)
         return blConvertSuccess;
     }
 
-    if (strcmp((char *)pstArguments->pucArgumentType, ARG_TYPE_GZIP) == 0) 
+    for(uint32_t ulIndex = 0; ulIndex < CONVERTER_COUNT; ulIndex++) 
     {
-        blConvertSuccess = GzipConvert(pstArguments->pucInputFileName, pstArguments->pucOutputFileName);
-    } 
-    else if (strcmp((char *)pstArguments->pucArgumentType, ARG_TYPE_HEXDUMP) == 0) 
-    {
-        blConvertSuccess = HexdumpConvert(pstArguments->pucInputFileName, pstArguments->pucOutputFileName);
-    } 
-    else if (strcmp((char *)pstArguments->pucArgumentType, ARG_TYPE_SREC) == 0) 
-    {
-        blConvertSuccess = SrecConvert(pstArguments->pucInputFileName, pstArguments->pucOutputFileName);
-    } 
-    else 
-    {
-        fprintf(stderr, "Error: Unsupported type . Only 'gzip' 'hexdump' and 'srec' is supported.\n");
-        blConvertSuccess = false;
+        if (strcmp((char *)pstArguments->pucArgumentType, 
+                   (char *)sstConversionMap[ulIndex].pucConversionType) == 0) 
+        {
+            blConvertSuccess = sstConversionMap[ulIndex].pfnFileConverter(
+                                           pstArguments->pucInputFileName, 
+                                           pstArguments->pucOutputFileName);
+            break;
+        }
     }
     
     return blConvertSuccess;

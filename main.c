@@ -5,8 +5,8 @@
 //
 // File      : main.c
 // Summary   : Entry point for file compression utility
-// Note      : Parses command-line arguments (-t, -i, -o), and calls gzip functions to compress
-//             files.
+// Note      : Parses command-line arguments (-t, -i, -o), and calls gzip 
+//             functions to compress files.
 // Author    : Shani
 // Date      : Feb 26, 2026
 //
@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include "Include/gzip/gzip.h"
 #include "Include/hexdump/hexdump.h"
 #include "Include/srec/srec.h"
@@ -39,44 +40,19 @@
 //*****************************************************************************
 int main(int lArgCount, char* pcArgv[]) 
 {
-    ARGUMENTS stArguments = {0}; 
+    bool blExecutionResult = false;
 
-    if(pcArgv == NULL || lArgCount <= 1) 
+    blExecutionResult = ExecuteApplication(lArgCount, pcArgv);
+
+    if (blExecutionResult == false) 
     {
-        fprintf(stderr, "Error: Command line format -t <type> -i <inputfilename> -o <outputfilename>\n");
-        return 1;
-    }   
-
-    // bool blParseResult = ParseArguments(lArgCount, pcArgv , &stArguments);
-
-    // if (blParseResult == true) 
-    // {
-    //     if(RunUtility(&stArguments) == true)
-    //     {
-    //         printf("Utility executed successfully.\n");
-    //     }
-    //     else
-    //     {
-    //         fprintf(stderr, "Error: Utility execution failed.\n");
-    //         return 1;
-    //     }
-    // }
-    // else
-    // {
-    //     fprintf(stderr, "Error parsing command-line arguments\n");
-    //     return 1;
-    // }
-
-    if(ParseArguments(lArgCount, pcArgv , &stArguments) == false) 
-    {
-        fprintf(stderr, "Error parsing command-line arguments\n");
+        fprintf(stderr, "Application execution failed.\n");
         return 1;
     }
-
-    if(RunUtility(&stArguments) == false)
+    else
     {
-        fprintf(stderr, "Error: Utility execution failed.\n");
-        return 1;
+        fprintf(stdout, "Application executed successfully.\n");
+        return 0;
     }
 
     return 0;

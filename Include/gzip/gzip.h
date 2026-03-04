@@ -29,7 +29,6 @@
 //**************************** Forward Declarations *************************** 
 
 bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput);
-static bool GzipDataCompre(FILE* pInput_file, gzFile pstOutput_file);
 
 //***************************** Class Declaration ***************************** 
  

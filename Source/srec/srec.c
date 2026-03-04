@@ -52,9 +52,9 @@
 //           The checksum is the one's complement of the sum of the count,  address, and data bytes.
 // Inputs  : ucCount - The total number of bytes in the record (Address + Data + Checksum).
 //           ulAddr  - The memory address for the record.
-//           pData   - Pointer to the buffer containing the raw data bytes.
+//           pucData   - Pointer to the buffer containing the raw data bytes.
 //           DataLen - The number of data bytes in the current record.
-// Outputs : Returns a single byte representing the calculated checksum.
+// Outputs : None.
 // Return  : uint8_t - The 8-bit checksum value.
 // Notes   : None
 //*****************************************************************************
@@ -77,10 +77,9 @@ uint8_t CalculateSrecChecksum(uint8_t ucCount, uint32_t ulAddr, uint8_t* pucData
 //****************************** SrecConvert *************************************
 // Purpose : Converts a binary input file into a Motorola S-record (SREC) 
 //           formatted text file using S3 (32-bit address) data records.
-// Inputs  : pInput  - Path to the binary input file to be converted.
-//           pOutput - Path to the output text file where SREC data is saved.
-// Outputs : Generates an SREC file containing a header (S0), data records (S3),
-//           and a termination record (S7).
+// Inputs  : pucInput  - Path to the binary input file to be converted.
+//           pucOutput - Path to the output text file where SREC data is saved.
+// Outputs : pucOutput - The file is created with SREC formatted records representing the binary data from the input file.
 // Return  : None
 // Notes   : Uses a fixed data length per line defined by SREC_DATA_PER_LINE.
 //           Calculates a one's complement checksum for each record.
@@ -89,13 +88,21 @@ bool SrecConvert(uint8_t* pucInput, uint8_t* pucOutput)
 {
     bool blSuccess = false;
     uint32_t ulRecordCounter = 0;
+    FILE *pInputFile = NULL;
+    FILE *pOutputFile = NULL;
 
-    FILE *pInputFile = fopen((const char*)pucInput, FILE_MODE_READ_BINARY);
-    FILE *pOutputFile = fopen((const char*)pucOutput, FILE_MODE_WRITE_TEXT);
+    if(pucInput == NULL || pucOutput == NULL) 
+    {
+        fprintf(stderr, "Error: Input and output file paths NULL.\n");
+        return blSuccess;
+    }
+
+    pInputFile = fopen((const char*)pucInput, FILE_MODE_READ_BINARY);
+    pOutputFile = fopen((const char*)pucOutput, FILE_MODE_WRITE_TEXT);
 
     if (pInputFile == NULL) 
     { 
-        perror("Error opening input file"); 
+        fprintf(stderr, "Error opening input file.\n"); 
         blSuccess = false;
         return blSuccess; 
     }
@@ -152,13 +159,13 @@ bool SrecConvert(uint8_t* pucInput, uint8_t* pucOutput)
 //****************************** WriteSrecHeader ******************************
 // Purpose : Formats and writes the Motorola S-Record S0 (Header) record 
 //           to the output file using the defined project name.
-// Inputs  : pOutputFile - Pointer to the destination file where the header 
+// Inputs  : pucOutputFile - Pointer to the destination file where the header 
 //           record is written.
-// Outputs : None
+// Outputs : pucOutputFile - The file is updated with the S0 header record containing the project name.
 // Return  : bool  - true if the header was written successfully, false otherwise.
 // Notes   : None
 //*****************************************************************************
-bool WriteSrecHeaderRecord(FILE *pOutputFile)
+bool WriteSrecHeaderRecord(FILE* pOutputFile)
 {
     bool blHeaderSuccess = false;
     const char* pProjectName = PROJECT_NAME;
@@ -187,7 +194,8 @@ bool WriteSrecHeaderRecord(FILE *pOutputFile)
 // Inputs  : pInputFile     - Pointer to the source binary file.
 //           pOutputFile    - Pointer to the destination text file.
 //           pulRecordCounter - Pointer to store the total number of records written .
-// Outputs : None
+// Outputs : pucOutputFile - The file is updated with S3 records containing the data from the input file.
+//           pulRecordCounter - Updated with the total number of S3 records written to the output file.
 // Return  : bool          - true if all records were processed and written successfully else false.
 // Notes   : Each record includes a type, byte count, address, hex-encoded data, and a checksum.
 //*****************************************************************************
@@ -251,7 +259,7 @@ bool WriteSrecDataRecord(FILE* pInputFile, FILE* pOutputFile, uint32_t* pulRecor
 //           to the output file based on the total number of data records.
 // Inputs  : pOutputFile  - Pointer to the destination SREC text file.
 //           ulRecordCount- The total number of S3 records written.
-// Outputs : None
+// Outputs : pOutputFile - The file is updated with an S5 or S6 record containing the count of data records.
 // Return  : bool        - true if the record was written successfully, false otherwise.
 // Notes   : S5 is used for 16-bit counts (up to 65,535). 
 //           S6 is used for 24-bit counts (up to 16,777,215).
@@ -292,11 +300,11 @@ bool WriteSrecCountRecord(FILE* pOutputFile, uint32_t ulRecordCount)
 //****************************** WriteSrecTerminationRecord *******************
 // Purpose : Formats and writes the Motorola S-Record S7 (32-bit Address) termination record to the output file.
 // Inputs  : pOutputFile - Pointer to the destination SREC text file.
-// Outputs : None
+// Outputs : pOutputFile - The file is updated with an S7 termination record containing a predefined entry point address (0x08000000).
 // Return  : bool       - true if the record was written successfully, false otherwise.
 // Notes   : None
 //*****************************************************************************
-bool WriteSrecTerminationRecord(FILE *pOutputFile)
+bool WriteSrecTerminationRecord(FILE* pOutputFile)
 {
     bool blTerminationSuccess = false;
     uint8_t ucTerminationByteCount = 0;

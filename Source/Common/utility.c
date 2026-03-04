@@ -40,9 +40,9 @@
 //****************************** ParseArguments ******************************
 // Purpose : Extracts command-line arguments and stores them in an ARGUMENTS structure .
 // Inputs  : unArgCount - total number of command-line arguments
-//           pArgv[]    - array of argument strings
-//           pArgs      - pointer to ARGUMENTS structure
-// Outputs : None
+//           pcArgv[]  - pointer to array of argument strings
+//           pstArguments - pointer to ARGUMENTS structure
+// Outputs : pstArguments - Arguments values are passed into it
 // Return  : bool - populated structure with parsed arguments
 // Notes   : 
 //   - Recognizes flags: -t <type>, -i <input>, -o <output>
@@ -50,25 +50,30 @@
 //   - Caller must validate that required arguments are present before use.
 //*****************************************************************************
 
-bool ParseArguments(uint16_t unArgCount, uint8_t *pucArgv[], ARGUMENTS* pstArguments) 
+bool ParseArguments(uint16_t unArgCount, char* pcArgv[], ARGUMENTS* pstArguments) 
 {
     bool blTypeFound = false;
 
+    if (pcArgv == NULL || pstArguments == NULL) 
+    {
+        return blTypeFound; 
+    }
+
     for (uint16_t unIndex = 1; unIndex < unArgCount; unIndex++) 
     {
-        if (strcmp((char *)pucArgv[unIndex], ARG_TYPE_FLAG) == 0 && (unIndex + 1 < unArgCount)) 
+        if (strcmp((char *)pcArgv[unIndex], ARG_TYPE_FLAG) == 0 && (unIndex + 1 < unArgCount)) 
         {
-            pstArguments->pucArgumentType = pucArgv[unIndex + 1];
+            pstArguments->pucArgumentType = (uint8_t *)pcArgv[unIndex + 1];
             blTypeFound = true;
         } 
-        else if (strcmp((char *)pucArgv[unIndex], ARG_INPUT_FLAG) == 0 && (unIndex + 1 < unArgCount)) 
+        else if (strcmp((char *)pcArgv[unIndex], ARG_INPUT_FLAG) == 0 && (unIndex + 1 < unArgCount)) 
         {
-            pstArguments->pucInputFileName = pucArgv[unIndex + 1];
+            pstArguments->pucInputFileName = (uint8_t *)pcArgv[unIndex + 1];
             blTypeFound = true;
        } 
-        else if (strcmp((char *)pucArgv[unIndex], ARG_OUTPUT_FLAG) == 0 && (unIndex + 1 < unArgCount)) 
+        else if (strcmp((char *)pcArgv[unIndex], ARG_OUTPUT_FLAG) == 0 && (unIndex + 1 < unArgCount)) 
         {
-            pstArguments->pucOutputFileName = pucArgv[unIndex + 1];
+            pstArguments->pucOutputFileName = (uint8_t *)pcArgv[unIndex + 1];
             blTypeFound = true;
         }
     }
@@ -80,7 +85,7 @@ bool ParseArguments(uint16_t unArgCount, uint8_t *pucArgv[], ARGUMENTS* pstArgum
 // Purpose : Executes the file utility based on parsed arguments.Validates required parameters and calls the appropriate
 //           processing function depending on the specified type.
 // Inputs  : pstArguments - pointer to ARGUMENTS structure
-// Outputs : Processed file written to the specified output filename, depending on the operation type.
+// Outputs : None
 // Return  : None 
 // Notes   : 
 //   - Currently supports "gzip", "hexdump", and "srec" types.

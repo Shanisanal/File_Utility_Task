@@ -31,25 +31,52 @@
 
 //****************************** main ******************************************
 // Purpose : Entry point for the file utility application.
-//           Parses command-line arguments and delegates execution
-//           to the RunUtility() function.
-// Inputs  : iArgc  - total number of command-line arguments
-//           pArgv[] - array of argument strings
-// Outputs : Executes the requested operation and writes results to the specified output file.
+// Inputs  : lArgCount  - total number of command-line arguments
+//           pcArgv[] - array of argument strings
+// Outputs : None
 // Return  : int - Returns 0 upon successful completion,
-//           non-zero if an error occurs during argument parsing or execution.
-// Notes   : 
-//   - Calls ParseArguments() to extract type, input, and output parameters.
-//   - Calls RunUtility() to perform the requested operation.
+// Notes   : None
 //*****************************************************************************
-int main(int iArgCount, char *pArgv[]) 
+int main(int lArgCount, char* pcArgv[]) 
 {
     ARGUMENTS stArguments = {0}; 
-    bool blParseResult = ParseArguments((uint16_t)iArgCount, (uint8_t **)pArgv , &stArguments);
 
-    if (blParseResult) 
+    if(pcArgv == NULL || lArgCount <= 1) 
     {
-        RunUtility(&stArguments);
+        fprintf(stderr, "Error: Command line format -t <type> -i <inputfilename> -o <outputfilename>\n");
+        return 1;
+    }   
+
+    // bool blParseResult = ParseArguments(lArgCount, pcArgv , &stArguments);
+
+    // if (blParseResult == true) 
+    // {
+    //     if(RunUtility(&stArguments) == true)
+    //     {
+    //         printf("Utility executed successfully.\n");
+    //     }
+    //     else
+    //     {
+    //         fprintf(stderr, "Error: Utility execution failed.\n");
+    //         return 1;
+    //     }
+    // }
+    // else
+    // {
+    //     fprintf(stderr, "Error parsing command-line arguments\n");
+    //     return 1;
+    // }
+
+    if(ParseArguments(lArgCount, pcArgv , &stArguments) == false) 
+    {
+        fprintf(stderr, "Error parsing command-line arguments\n");
+        return 1;
+    }
+
+    if(RunUtility(&stArguments) == false)
+    {
+        fprintf(stderr, "Error: Utility execution failed.\n");
+        return 1;
     }
 
     return 0;

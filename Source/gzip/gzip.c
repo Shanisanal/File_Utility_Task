@@ -66,6 +66,39 @@ bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
         return blSuccess; 
     }
 
+    blSuccess = GzipDataCompre(pInput_file, pstOutput_file);
+
+    if(blSuccess == false) 
+    {
+        fprintf(stderr, "Error: gzip compression failed.\n");
+        fclose(pInput_file);
+        gzclose(pstOutput_file);
+        return blSuccess;
+    }
+    else
+    {   
+        fprintf(stdout, "File '%s' compressed successfully to '%s'.\n", pucInput, pucOutput);
+        fclose(pInput_file);
+        gzclose(pstOutput_file);
+    }
+    
+    return blSuccess;
+}
+
+//****************************** GzipDataCompre ********************************
+// Purpose : Orchestrates the file compression process by managing file
+//           resources and dispatching the data compression pump.
+// Inputs  : pucInput  - Path to the source file to be compressed.
+//           pucOutput - Path where the .gz file will be created.
+// Outputs : pucOutput file is created with gzip-compressed data from pucInput.
+// Return  : bool - true if files were compressed successfully, else false.
+// Notes   : None
+//*****************************************************************************
+static bool GzipDataCompre(FILE* pInput_file, gzFile pstOutput_file)
+{
+    bool blDataCompressionSuccess = false;
+    uint8_t ucBuffer[GZIP_BUFFER_SIZE] = {0};
+    uint32_t  ulBytesRead = 0;
     while(true)
     {
         ulBytesRead = fread(ucBuffer, BYTE_SIZE, sizeof(ucBuffer), pInput_file);
@@ -73,33 +106,24 @@ bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
         {
             if (feof(pInput_file)) 
             {
+                blDataCompressionSuccess = true;
                 break; 
             } 
             else 
             {
                 fprintf(stderr, "Error reading input file.\n");
-                fclose(pInput_file);
-                gzclose(pstOutput_file);
-                blSuccess = false;
-                return blSuccess;
+                blDataCompressionSuccess = false;
+                break;
             }
         }
     
         if (gzwrite(pstOutput_file, ucBuffer, ulBytesRead) != (int)ulBytesRead)
         {
-            perror("Error writing compressed data");
-            fclose(pInput_file);
-            gzclose(pstOutput_file);
-            blSuccess = false;
-            return blSuccess;
+            fprintf(stderr, "Error writing compressed data");
+            blDataCompressionSuccess = false;
+            break;
         }
     }
-
-    fclose(pInput_file);
-    gzclose(pstOutput_file);
-    blSuccess = true;
-
-    return blSuccess;
+    return blDataCompressionSuccess; 
 }
-
 //EOF

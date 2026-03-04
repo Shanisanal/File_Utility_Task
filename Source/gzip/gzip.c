@@ -59,8 +59,7 @@ bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
  
     if (pstOutput_file == NULL) 
     { 
-      fprintf(stderr, "Error: could not open output file '%s' "
-                      "for gzip compression\n", pucOutput) ;      
+        fprintf(stderr, "Error opening output file for gzip compression\n");      
         fclose(pInput_file); 
         blSuccess = false;
         return blSuccess; 
@@ -77,11 +76,10 @@ bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
     }
     else
     {   
-        fprintf(stdout, "File '%s' compressed successfully to '%s'.\n", pucInput, pucOutput);
         fclose(pInput_file);
         gzclose(pstOutput_file);
     }
-    
+
     return blSuccess;
 }
 

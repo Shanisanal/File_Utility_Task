@@ -31,7 +31,7 @@
 //           the specified output file.
 // Inputs  : pucInput  - path to the input file 
 //           pucOutput - path to the output file 
-// Outputs : Creates a text file containing the hexdump at the given output path.
+// Outputs : None
 // Return  : bool - Returns true if the hexdump was successfully generated and written to the output file, false otherwise.
 // Notes   : None
 //*****************************************************************************
@@ -41,13 +41,21 @@ bool HexdumpConvert(uint8_t* pucInput, uint8_t* pucOutput)
     uint8_t ucbuffer[HEXDUMP_BYTES_PER_LINE] = {0};    
     uint32_t ulBytesRead = 0;
     uint32_t ulOffset = 0;
+    FILE* pInputFile = NULL;
+    FILE* pOutputFile = NULL;
+
+    if(pucInput == NULL || pucOutput == NULL) 
+    {
+        fprintf(stderr, "Error: Input and output file paths NULL.\n");
+        return blSuccess;
+    }
     
-    FILE *pInputFile = fopen((const char*)pucInput, FILE_MODE_READ_BINARY);
-    FILE *pOutputFile = fopen((const char*)pucOutput, FILE_MODE_WRITE_TEXT);
+    pInputFile = fopen((const char*)pucInput, FILE_MODE_READ_BINARY);
+    pOutputFile = fopen((const char*)pucOutput, FILE_MODE_WRITE_TEXT);
 
     if (pInputFile == NULL) 
     { 
-        perror("Error opening input file"); 
+        fprintf(stderr, "Error opening input file.\n"); 
         blSuccess = false;
         return blSuccess; 
     }
@@ -61,7 +69,7 @@ bool HexdumpConvert(uint8_t* pucInput, uint8_t* pucOutput)
 
     while(true)
     {
-        ulBytesRead = fread(ucbuffer, 1, sizeof(ucbuffer), pInputFile);
+        ulBytesRead = fread(ucbuffer, BYTE_SIZE, sizeof(ucbuffer), pInputFile);
 
         if (ulBytesRead == 0) 
         {

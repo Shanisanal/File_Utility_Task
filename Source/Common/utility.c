@@ -33,12 +33,57 @@
 #define ARG_TYPE_HEXDUMP        "hexdump"
 #define ARG_TYPE_SREC           "srec"
 
+#define FORMAT_MSG              "Usage: -t <type> -i <input> -o <output>\n"
+
 //***************************** Local Variables ******************************* 
 
 //****************************** Local Functions ******************************/
+//****************************** ExecuteApplication ***************************
+// Purpose : Manages the application lifecycle from parsing to execution.
+// Inputs  : lArgCount  - total number of command-line arguments
+//           pcArgv[] - pointer to array of argument strings
+// Outputs : None
+// Return  : bool - Returns true if execution was successful, false otherwise
+// Notes   : Calls ParseArguments and RunUtility functions.
+//*****************************************************************************
+bool ExecuteApplication(int lArgCount, char* pcArgv[])
+{
+    ARGUMENTS stArguments = {0};
+    bool blParseResult = false;
+    bool blRunResult = false;
 
-//****************************** ParseArguments ******************************
-// Purpose : Extracts command-line arguments and stores them in an ARGUMENTS structure .
+    if (pcArgv == NULL || lArgCount <= 1) 
+    {
+        fprintf(stderr, FORMAT_MSG);
+        return false;
+    }
+
+    blParseResult = ParseArguments(lArgCount, pcArgv, &stArguments);
+
+    if(blParseResult == false) 
+    {
+        fprintf(stderr, "Error: Failed to parse arguments. %s", FORMAT_MSG);
+        return false;
+    }
+    else
+    {
+        blRunResult = RunUtility(&stArguments);
+        if(blRunResult == false) 
+        {
+            fprintf(stderr, "Error: Utility execution failed.\n");
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+   
+    return true;
+}
+//****************************** ParseArguments *******************************
+// Purpose : Extracts command-line arguments and stores them in an ARGUMENTS 
+//           structure .
 // Inputs  : unArgCount - total number of command-line arguments
 //           pcArgv[]  - pointer to array of argument strings
 //           pstArguments - pointer to ARGUMENTS structure
@@ -50,7 +95,7 @@
 //   - Caller must validate that required arguments are present before use.
 //*****************************************************************************
 
-bool ParseArguments(uint16_t unArgCount, char* pcArgv[], ARGUMENTS* pstArguments) 
+bool ParseArguments(uint16_t unArgCount, char* pcArgv[],ARGUMENTS* pstArguments) 
 {
     bool blTypeFound = false;
 
@@ -81,9 +126,9 @@ bool ParseArguments(uint16_t unArgCount, char* pcArgv[], ARGUMENTS* pstArguments
     return blTypeFound;
 }
 
-//****************************** RunUtility ******************************
-// Purpose : Executes the file utility based on parsed arguments.Validates required parameters and calls the appropriate
-//           processing function depending on the specified type.
+//****************************** RunUtility ***********************************
+// Purpose : Executes the file utility based on parsed arguments.Validates 
+//           required parameters and calls the appropriate processing function
 // Inputs  : pstArguments - pointer to ARGUMENTS structure
 // Outputs : None
 // Return  : None 
@@ -96,9 +141,11 @@ bool RunUtility(ARGUMENTS* pstArguments)
 {
     bool blConvertSuccess = false;
 
-    if (pstArguments->pucArgumentType == NULL || pstArguments->pucInputFileName == NULL || pstArguments->pucOutputFileName == NULL) 
+    if (pstArguments->pucArgumentType == NULL  ||
+        pstArguments->pucInputFileName == NULL ||
+        pstArguments->pucOutputFileName == NULL) 
     {
-        fprintf(stderr, "Error: Missing required arguments. Usage: -t <type> -i <inputfilename> -o <outputfilename>\n");
+        fprintf(stderr, "Error: Missing required arguments. %s", FORMAT_MSG);
         blConvertSuccess = false;
         return blConvertSuccess;
     }

@@ -17,6 +17,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "Common/utility.h"
+#include "gzip/gzip.h"
 
 //******************************* Local Types ********************************* 
  
@@ -24,6 +25,9 @@
 #define GZIP_BUFFER_SIZE       4096
 
 //***************************** Local Variables ******************************* 
+
+//****************************** Local Functions ******************************
+static bool GzipDataCompress(FILE* pInput_file, gzFile pstOutput_file);
 
 //****************************** GzipConvert ******************************
 // Purpose : Compresses an input file using the gzip format and writes
@@ -38,8 +42,6 @@ bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
 {
     bool blSuccess = false;
     gzFile pstOutput_file = NULL;
-    uint8_t ucBuffer[GZIP_BUFFER_SIZE] = {0};
-    uint32_t  ulBytesRead = 0;
 
     if(pucInput == NULL || pucOutput == NULL) 
     {
@@ -65,7 +67,7 @@ bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
         return blSuccess; 
     }
 
-    blSuccess = GzipDataCompre(pInput_file, pstOutput_file);
+    blSuccess = GzipDataCompress(pInput_file, pstOutput_file);
 
     if(blSuccess == false) 
     {
@@ -83,7 +85,7 @@ bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
     return blSuccess;
 }
 
-//****************************** GzipDataCompre ********************************
+//****************************** GzipDataCompress ********************************
 // Purpose : Orchestrates the file compression process by managing file
 //           resources and dispatching the data compression pump.
 // Inputs  : pucInput  - Path to the source file to be compressed.
@@ -92,7 +94,7 @@ bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
 // Return  : bool - true if files were compressed successfully, else false.
 // Notes   : None
 //*****************************************************************************
-static bool GzipDataCompre(FILE* pInput_file, gzFile pstOutput_file)
+static bool GzipDataCompress(FILE* pInput_file, gzFile pstOutput_file)
 {
     bool blDataCompressionSuccess = false;
     uint8_t ucBuffer[GZIP_BUFFER_SIZE] = {0};

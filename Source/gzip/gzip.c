@@ -31,13 +31,8 @@
 // Inputs  : pInput  - path to the input file (const char*)
 //           pOutput - path to the output file (const char*)
 // Outputs : Creates a gzip-compressed file at the given output path.
-// Return  : None 
-// Notes   : 
-//   - Opens the input file in binary mode ("rb").
-//   - Uses zlib's gzopen/gzwrite to perform compression.
-//   - Reads data in 4096-byte chunks for efficiency.
-//   - Handles errors .
-//   - Ensures proper cleanup by closing both input and output files.
+// Return  : bool - Returns true if the compression was successful, false otherwise. 
+// Notes   : Uses zlib's gzopen/gzwrite to perform compression.
 //*****************************************************************************
 bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
 {

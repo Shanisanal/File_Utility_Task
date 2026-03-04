@@ -25,13 +25,14 @@
 //***************************** Local Variables ******************************* 
  
 //****************************** Local Functions ******************************
+static bool HexdumpDataWrite(FILE* pInputFile, FILE* pOutputFile);
 
 //****************************** HexdumpConvert ******************************
 // Purpose : Generates a hexadecimal dump of the input file and writes the 
 //           formatted output(hex values + ASCII equivalents) to the output file.
 // Inputs  : pucInput  - path to the input file 
 //           pucOutput - path to the output file 
-// Outputs : None
+// Outputs : pucOutput file is created with the hexdump of pucInput.
 // Return  : bool - Returns true if the hexdump was successfully generated and 
 //           written to the output file, false otherwise.
 // Notes   : None
@@ -39,9 +40,6 @@
 bool HexdumpConvert(uint8_t* pucInput, uint8_t* pucOutput) 
 {
     bool blSuccess = false;
-    uint8_t ucbuffer[HEXDUMP_BYTES_PER_LINE] = {0};
-    uint32_t ulBytesRead = 0;
-    uint32_t ulOffset = 0;
     FILE* pInputFile = NULL;
     FILE* pOutputFile = NULL;
 
@@ -68,6 +66,39 @@ bool HexdumpConvert(uint8_t* pucInput, uint8_t* pucOutput)
         return blSuccess; 
     }
 
+    blSuccess = HexdumpDataCompre(pInputFile, pOutputFile);
+
+    if(blSuccess == false) 
+    {
+        fprintf(stderr, "Error generating hexdump.\n");
+        fclose(pInputFile);
+        fclose(pOutputFile);
+        return blSuccess;
+    }
+    else
+    {   
+        fclose(pInputFile);
+        fclose(pOutputFile);
+    }
+
+    return blSuccess;
+}
+
+//****************************** HexdumpDataWrite ******************************
+// Purpose : writes a formatted hexdump representation to the output text file
+// Inputs  : pucInput  - path to the input file 
+//           pucOutput - path to the output file 
+// Outputs : pucOutput file is created with the hexdump of pucInput.
+// Return  : bool - Returns true if the hexdump was successfully generated and 
+//           written to the output file, false otherwise.
+// Notes   : None
+//*****************************************************************************
+static bool HexdumpDataWrite(FILE* pInputFile, FILE* pOutputFile)
+{
+    uint8_t ucbuffer[HEXDUMP_BYTES_PER_LINE] = {0};
+    uint32_t ulBytesRead = 0;
+    uint32_t ulOffset = 0;
+    bool  blHexdumpWriteSuccess = false;
     while(true)
     {
         ulBytesRead = fread(ucbuffer, BYTE_SIZE, sizeof(ucbuffer), pInputFile);
@@ -76,18 +107,16 @@ bool HexdumpConvert(uint8_t* pucInput, uint8_t* pucOutput)
         {
             if (feof(pInputFile)) 
             {
+                blHexdumpWriteSuccess = true;
                 break; 
             } 
             else 
             {
-                perror("Error reading input file");
-                fclose(pInputFile);
-                fclose(pOutputFile);
-                blSuccess = false;
-                return blSuccess;
+                fprintf(stderr, "Error reading input file");
+                blHexdumpWriteSuccess = false;
+                break;
             }
         }
-
         fprintf(pOutputFile, "%08x  ", ulOffset);
 
         for (uint32_t ulIndex = 0; ulIndex < HEXDUMP_BYTES_PER_LINE; ulIndex++) 
@@ -101,7 +130,6 @@ bool HexdumpConvert(uint8_t* pucInput, uint8_t* pucOutput)
                 fprintf(pOutputFile, "   ");
             }
         }
-
         fprintf(pOutputFile, " |");
 
         for (uint32_t ulIndex = 0; ulIndex < ulBytesRead; ulIndex++) 
@@ -109,15 +137,10 @@ bool HexdumpConvert(uint8_t* pucInput, uint8_t* pucOutput)
             fprintf(pOutputFile, "%c", 
                     isprint(ucbuffer[ulIndex]) ? ucbuffer[ulIndex] : '.');
         }
-
         fprintf(pOutputFile, "|\n");
         ulOffset += ulBytesRead;
     }
-
-    fclose(pInputFile);
-    fclose(pOutputFile);
-    blSuccess = true;
-    return blSuccess;
+    return blHexdumpWriteSuccess;
 }
 
 //EOF

@@ -51,7 +51,7 @@
 static void CloseFilesOnError(FILE* pInputFile, FILE* pOutputFile);
 static bool WriteSrecRecords(FILE* pInputFile, FILE* pOutputFile,
                              uint32_t* pulRecordCounter);
-                             
+
 //************************** CalculateSrecChecksum ***************************
 // Purpose : Calculates the Motorola S-record checksum for a single record.
 // Inputs  : ucCount - The total number of bytes in the record (Address + Data +
@@ -357,8 +357,7 @@ bool WriteSrecCountRecord(FILE* pOutputFile, uint32_t ulRecordCount)
 // Purpose : Formats and writes the Motorola S-Record S7 (32-bit Address)
 //           termination record to the output file. 
 // Inputs  : pOutputFile - Pointer to the destination SREC text file. 
-// Outputs : pOutputFile - The file is updated with an S7 termination record 
-// containing a predefined entry point address (0x08000000). 
+// Outputs : pOutputFile - The file is updated with an S7 termination record . 
 // Return  : bool - true if the record was written successfully, false otherwise. 
 // Notes   : None
 //*****************************************************************************

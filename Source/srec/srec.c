@@ -42,11 +42,14 @@
 #define SREC_TERMINATION_RECORD "S7"
 
 #define SREC_CHECKSUM_SIZE 1
+#define BITS_SHIFT_8       8
+#define BITS_SHIFT_16      16
+#define BITS_SHIFT_24      24
+#define BYTE_MASK          0xFF
 
 //***************************** Local Variables *******************************/
 
 //****************************** Local Functions ******************************/
-static void CloseFiles(FILE* pInputFile, FILE* pOutputFile);
 static bool WriteSrecRecords(FILE* pInputFile, FILE* pOutputFile,
                              uint32_t* pulRecordCounter);
 
@@ -58,29 +61,31 @@ static bool WriteSrecRecords(FILE* pInputFile, FILE* pOutputFile,
 //           pucData   - Pointer to the buffer containing the raw data bytes.
 //           DataLen - The number of data bytes in the current record.
 // Outputs : None.
-// Return  : The checksum value calculated.
+// Return  : ucChecksum - The checksum value calculated.
 // Notes   : None
 //*****************************************************************************
 uint8_t CalculateSrecChecksum(uint8_t ucCount, uint32_t ulAddr,uint8_t* pucData,
                               uint32_t ulDataLen) 
 {
     uint32_t ulSum = ucCount;
+    uint8_t ucChecksum = 0;
 
-    ulSum += (ulAddr >> 24) & 0xFF;
-    ulSum += (ulAddr >> 16) & 0xFF;
-    ulSum += (ulAddr >> 8) & 0xFF;
-    ulSum += (ulAddr & 0xFF);
+    ulSum += (ulAddr >> BITS_SHIFT_24) & BYTE_MASK;
+    ulSum += (ulAddr >> BITS_SHIFT_16) & BYTE_MASK;
+    ulSum += (ulAddr >> BITS_SHIFT_8) & BYTE_MASK;
+    ulSum += (ulAddr & BYTE_MASK);
 
     for (uint32_t ulIndex = 0; ulIndex < ulDataLen; ulIndex++) 
     {
         ulSum += pucData[ulIndex];
     }
+    ucChecksum = (uint8_t)(~ulSum & BYTE_MASK);
 
-    return (uint8_t)(~ulSum & 0xFF);
+    return ucChecksum;
 }
 //****************************** SrecConvert ***********************************
 // Purpose : Converts a binary input file into a Motorola S-record (SREC)
-//           formatted text file using S3 (32-bit address) data records.
+//           formatted text file .
 // Inputs  : pucInput  - Path to the binary input file to be converted.
 //           pucOutput - Path to the output text file where SREC data is saved.
 // Outputs : pucOutput - The file is created with SREC formatted records
@@ -90,7 +95,7 @@ uint8_t CalculateSrecChecksum(uint8_t ucCount, uint32_t ulAddr,uint8_t* pucData,
 //*****************************************************************************
 bool SrecConvert(uint8_t* pucInput, uint8_t* pucOutput) 
 {
-    bool blSuccess = false;
+    bool blSuccess = true;
     uint32_t ulRecordCounter = 0;
     FILE* pInputFile = NULL;
     FILE* pOutputFile = NULL;
@@ -98,54 +103,47 @@ bool SrecConvert(uint8_t* pucInput, uint8_t* pucOutput)
     if (pucInput == NULL || pucOutput == NULL) 
     {
         fprintf(stderr, "Error: Input and output file paths NULL.\n");
-        return blSuccess;
+        blSuccess = false;
     }
 
-    pInputFile = fopen((const char*)pucInput, FILE_MODE_READ_BINARY);
-    pOutputFile = fopen((const char*)pucOutput, FILE_MODE_WRITE_TEXT);
-
-    if (pInputFile == NULL) 
+    if(blSuccess == true)
     {
-        fprintf(stderr, "Error opening input file.\n");
-        return blSuccess;
+        pInputFile = fopen((const char*)pucInput, FILE_MODE_READ_BINARY);
+        
+        if (pInputFile == NULL) 
+        { 
+            fprintf(stderr, "Error opening input file.\n"); 
+            blSuccess = false; 
+        }
     }
 
-    if (pOutputFile == NULL) 
+    if(blSuccess == true)
     {
-        fclose(pInputFile);
-        return blSuccess;
+        pOutputFile = fopen((const char*)pucOutput, FILE_MODE_WRITE_TEXT);
+
+        if (pOutputFile == NULL) 
+        { 
+            fprintf(stderr, "Error opening output file.\n"); 
+            blSuccess = false; 
+        }
     }
+
     /* SREC Record Header + Data Records + Count Records + Termination Record */
-    blSuccess = WriteSrecRecords(pInputFile, pOutputFile, &ulRecordCounter);
-
-    if (blSuccess == false) 
+    if(blSuccess == true)
     {
-        fprintf(stderr, "Error writing SREC records.\n");
-    }
+        blSuccess = WriteSrecRecords(pInputFile, pOutputFile, &ulRecordCounter);
 
-    CloseFiles(pInputFile, pOutputFile);
+        if (blSuccess == false) 
+        {
+            fprintf(stderr, "Error writing SREC records.\n");
+        }
+    }   
+
+    fclose(pInputFile);
+    fclose(pOutputFile);;
     return blSuccess;
 }
 
-//************************** CloseFiles********* ******************************
-// Purpose : Closes input and output files .
-// Inputs  : pInputFile  - Pointer to input file to close.
-//           pOutputFile - Pointer to output file to close.
-// Outputs : None
-// Return  : None
-// Notes   : None
-//*****************************************************************************
-static void CloseFiles(FILE* pInputFile, FILE* pOutputFile)
-{
-    if(pInputFile == NULL || pOutputFile == NULL) 
-    {
-        fprintf(stderr, "Error: Invalid file pointers for closing files.\n");
-        return;
-    }
-
-    fclose(pInputFile);
-    fclose(pOutputFile);
-}
 //************************** WriteSrecRecords ********************************
 // Purpose : Writes all SREC records (Header, Data, Count, Termination).
 // Inputs  : pInputFile     - Pointer to input binary file.
@@ -158,7 +156,7 @@ static void CloseFiles(FILE* pInputFile, FILE* pOutputFile)
 static bool WriteSrecRecords(FILE* pInputFile, FILE* pOutputFile,
                              uint32_t* pulRecordCnt)
 {
-    bool blSrecRecordSuccess = false;
+    bool blSrecRecordSuccess = true;
 
     if(pInputFile == NULL || pOutputFile == NULL || pulRecordCnt == NULL) 
     {
@@ -166,40 +164,47 @@ static bool WriteSrecRecords(FILE* pInputFile, FILE* pOutputFile,
         return blSrecRecordSuccess;
     }
 
-    blSrecRecordSuccess = WriteSrecHeaderRecord(pOutputFile);
-
-    if (blSrecRecordSuccess == false) 
+    if(blSrecRecordSuccess == true)
     {
-        fprintf(stderr, "Error writing SREC header record\n");
-        return blSrecRecordSuccess;   
+        blSrecRecordSuccess = WriteSrecHeaderRecord(pOutputFile);
+
+        if (blSrecRecordSuccess == false) 
+        {
+            fprintf(stderr, "Error writing SREC header record\n");
+        }
     }
 
-    blSrecRecordSuccess = false;
-    blSrecRecordSuccess = WriteSrecDataRecord(pInputFile, pOutputFile,pulRecordCnt);
-
-    if (blSrecRecordSuccess == false) 
+    if(blSrecRecordSuccess == true)
     {
-        fprintf(stderr, "Error writing SREC data records\n");
-        return blSrecRecordSuccess;   
+         blSrecRecordSuccess = WriteSrecDataRecord(pInputFile, pOutputFile,
+                                                   pulRecordCnt);
+
+        if (blSrecRecordSuccess == false) 
+        {
+            fprintf(stderr, "Error writing SREC data records\n");
+        }
     }
 
-    blSrecRecordSuccess = false;
-    blSrecRecordSuccess = WriteSrecCountRecord(pOutputFile, *pulRecordCnt);
-
-    if (blSrecRecordSuccess == false) 
+    if(blSrecRecordSuccess == true)
     {
-        fprintf(stderr, "Error writing SREC count record\n");
-        return blSrecRecordSuccess;   
+        blSrecRecordSuccess = WriteSrecCountRecord(pOutputFile, *pulRecordCnt);
+
+        if (blSrecRecordSuccess == false) 
+        {
+            fprintf(stderr, "Error writing SREC count record\n");
+        }
     }
 
-    blSrecRecordSuccess = false;
-    blSrecRecordSuccess = WriteSrecTerminationRecord(pOutputFile);
+    if(blSrecRecordSuccess == true) 
+    {
+        blSrecRecordSuccess = WriteSrecTerminationRecord(pOutputFile);
 
-    if (blSrecRecordSuccess == false) 
-    {   
-        fprintf(stderr, "Error writing SREC termination record\n");
-        return blSrecRecordSuccess;   
-    }    
+        if (blSrecRecordSuccess == false) 
+        {
+            fprintf(stderr, "Error writing SREC termination record\n");
+        }   
+    }
+
     return blSrecRecordSuccess;
 
 }
@@ -215,7 +220,7 @@ static bool WriteSrecRecords(FILE* pInputFile, FILE* pOutputFile,
 //*****************************************************************************
 bool WriteSrecHeaderRecord(FILE* pOutputFile) 
 {
-    bool blHeaderSuccess = false;
+    bool blHeaderSuccess = true;
     const char* pProjectName = PROJECT_NAME;
     uint8_t ucHeaderChecksum = 0;
     uint8_t ucProjectNameLen = (uint8_t)strlen(pProjectName);
@@ -226,28 +231,31 @@ bool WriteSrecHeaderRecord(FILE* pOutputFile)
     if(pOutputFile == NULL) 
     {
         fprintf(stderr, "Error: Invalid output file for SrecHeaderRecord\n");
-        return blHeaderSuccess;
+        blHeaderSuccess =  false;
     }
 
-    fprintf(pOutputFile, "%s%02X", SREC_HEADER_RECORD_TYPE, ucHederByteCount);
-    fprintf(pOutputFile, "%04X", SREC_HEADER_ADDR);
-
-    for (uint8_t ucIndex = 0; ucIndex < ucProjectNameLen; ucIndex++) 
+    if(blHeaderSuccess == true) 
     {
-        fprintf(pOutputFile, "%02X", (uint8_t)pProjectName[ucIndex]);
+        fprintf(pOutputFile, "%s%02X", SREC_HEADER_RECORD_TYPE, ucHederByteCount);
+        fprintf(pOutputFile, "%04X", SREC_HEADER_ADDR);
+
+        for (uint8_t ucIndex = 0; ucIndex < ucProjectNameLen; ucIndex++) 
+        {
+            fprintf(pOutputFile, "%02X", (uint8_t)pProjectName[ucIndex]);
+        }
+
+        ucHeaderChecksum = CalculateSrecChecksum ( ucHederByteCount, 0, 
+                                (uint8_t*)pProjectName, ucProjectNameLen );
+
+        fprintf(pOutputFile, "%02X\n", ucHeaderChecksum);
     }
 
-    ucHeaderChecksum = CalculateSrecChecksum ( ucHederByteCount, 0, 
-                            (uint8_t*)pProjectName, ucProjectNameLen );
-
-    fprintf(pOutputFile, "%02X\n", ucHeaderChecksum);
-    blHeaderSuccess = true;
     return blHeaderSuccess;
 }
 
 //****************************** WriteSrecDataRecord **************************
 // Purpose : Reads data from a binary input file and formats it into Motorola
-//           S-Record S3 (32-bit address) data records.
+//           S-Record S3 data records.
 // Inputs  : pInputFile     - Pointer to the source binary file.
 //           pOutputFile    - Pointer to the destination text file.
 //           pulRecordCounter - Pointer to store the total number of records
@@ -262,7 +270,7 @@ bool WriteSrecHeaderRecord(FILE* pOutputFile)
 bool WriteSrecDataRecord(FILE* pInputFile, FILE* pOutputFile,
                          uint32_t* pulRecordCounter) 
 {
-    bool blDataRecordSuccess = false;
+    bool blDataRecordSuccess = true;
     uint8_t ucBuffer[SREC_DATA_PER_LINE] = {0};
     uint32_t ulBytesRead = 0;
     uint32_t ulAddress = SREC_DATA_RECORD_ADDR;
@@ -273,48 +281,51 @@ bool WriteSrecDataRecord(FILE* pInputFile, FILE* pOutputFile,
     if (pInputFile == NULL || pOutputFile == NULL || pulRecordCounter == NULL) 
     {
         fprintf(stderr, "Invalid parameters for SrecDataRecord\n");
-        return blDataRecordSuccess;
+        blDataRecordSuccess = false;
     }
 
-    while (true) 
+    if(blDataRecordSuccess == true) 
     {
-        ulBytesRead = fread(ucBuffer, 1, sizeof(ucBuffer), pInputFile);
-
-        if (ulBytesRead == 0) 
+        while (true) 
         {
-            if (feof(pInputFile)) 
+            ulBytesRead = fread(ucBuffer, 1, sizeof(ucBuffer), pInputFile);
+
+            if (ulBytesRead == 0) 
             {
-                break;
-            } 
-            else 
-            {
-                perror("Error reading input file");
-                return blDataRecordSuccess;
+                if (feof(pInputFile)) 
+                {
+                    break;
+                } 
+                else 
+                {
+                    perror("Error reading input file");
+                    return blDataRecordSuccess;
+                }
             }
+            //Calculate ByteCount = Address(4 bytes) + Data  + Checksum(1 byte)
+            ucDataRecordByteCount = (uint8_t)(SREC_DATA_RECORD_ADDR_SIZE +
+                                            ulBytesRead + SREC_CHECKSUM_SIZE);
+            ucDataChecksum = CalculateSrecChecksum(ucDataRecordByteCount, ulAddress,
+                                                ucBuffer, ulBytesRead);
+
+            // Format: S3 [ Byte Count] [4 byte Address] [Data] [Checksum]
+            fprintf(pOutputFile, "%s%02X%08X", SREC_DATA_RECORD_TYPE,
+                    ucDataRecordByteCount, ulAddress);
+
+            for (uint32_t ulIndex = 0; ulIndex < ulBytesRead; ulIndex++) 
+            {
+                fprintf(pOutputFile, "%02X", ucBuffer[ulIndex]);
+            }
+            fprintf(pOutputFile, "%02X\n", ucDataChecksum);
+
+            // Increment the address for the next line
+            ulAddress += ulBytesRead;
+            ulCounter++;
         }
-        //Calculate ByteCount = Address(4 bytes) + Data  + Checksum(1 byte)
-        ucDataRecordByteCount = (uint8_t)(SREC_DATA_RECORD_ADDR_SIZE +
-                                          ulBytesRead + SREC_CHECKSUM_SIZE);
-        ucDataChecksum = CalculateSrecChecksum(ucDataRecordByteCount, ulAddress,
-                                               ucBuffer, ulBytesRead);
 
-        // Format: S3 [ Byte Count] [4 byte Address] [Data] [Checksum]
-        fprintf(pOutputFile, "%s%02X%08X", SREC_DATA_RECORD_TYPE,
-                ucDataRecordByteCount, ulAddress);
-
-        for (uint32_t ulIndex = 0; ulIndex < ulBytesRead; ulIndex++) 
-        {
-            fprintf(pOutputFile, "%02X", ucBuffer[ulIndex]);
-        }
-        fprintf(pOutputFile, "%02X\n", ucDataChecksum);
-
-        // Increment the address for the next line
-        ulAddress += ulBytesRead;
-        ulCounter++;
     }
 
     *pulRecordCounter = ulCounter;
-    blDataRecordSuccess = true;
     return blDataRecordSuccess;
 }
 
@@ -331,40 +342,42 @@ bool WriteSrecDataRecord(FILE* pInputFile, FILE* pOutputFile,
 //*****************************************************************************
 bool WriteSrecCountRecord(FILE* pOutputFile, uint32_t ulRecordCount) 
 {
-    bool blCountRecordSuccess = false;
+    bool blCountRecordSuccess = true ;
     uint8_t ucCountRecordByteCount = 0;
     uint8_t ucChecksum = 0;
 
     if (pOutputFile == NULL) 
     {
         fprintf(stderr, "Invalid output file for WriteSrecCountRecord\n");
-        return blCountRecordSuccess;
+        blCountRecordSuccess = false;
     }
 
-    if (ulRecordCount <= SREC_S5_MAX_COUNT) 
+    if(blCountRecordSuccess == true) 
     {
-        ucCountRecordByteCount = SREC_S5_RECORD_SIZE + SREC_CHECKSUM_SIZE;
-        ucChecksum = CalculateSrecChecksum(ucCountRecordByteCount,
-                                           ulRecordCount, NULL, 0);
-        fprintf(pOutputFile, "%s%02X%04X%02X\n", SREC_COUNT_RECORD_S5,
-                ucCountRecordByteCount, (uint16_t)ulRecordCount, ucChecksum);
-    } 
-    else if (ulRecordCount <= SREC_S6_MAX_COUNT) 
-    {
-        ucCountRecordByteCount = SREC_S6_RECORD_SIZE + SREC_CHECKSUM_SIZE;
-        ucChecksum = CalculateSrecChecksum(ucCountRecordByteCount,
-                                           ulRecordCount, NULL, 0);
-        fprintf(pOutputFile, "%s%02X%06X%02X\n", SREC_COUNT_RECORD_S6,
-                ucCountRecordByteCount, ulRecordCount, ucChecksum);
-    } 
-    else 
-    {
-        fprintf(stderr,
-                "Error: Record count exceeds maximum for S5/S6 records\n");
-        return blCountRecordSuccess;
+        if (ulRecordCount <= SREC_S5_MAX_COUNT) 
+        {
+            ucCountRecordByteCount = SREC_S5_RECORD_SIZE + SREC_CHECKSUM_SIZE;
+            ucChecksum = CalculateSrecChecksum(ucCountRecordByteCount,
+                                            ulRecordCount, NULL, 0);
+            fprintf(pOutputFile, "%s%02X%04X%02X\n", SREC_COUNT_RECORD_S5,
+                    ucCountRecordByteCount, (uint16_t)ulRecordCount, ucChecksum);
+        } 
+        else if (ulRecordCount <= SREC_S6_MAX_COUNT) 
+        {
+            ucCountRecordByteCount = SREC_S6_RECORD_SIZE + SREC_CHECKSUM_SIZE;
+            ucChecksum = CalculateSrecChecksum(ucCountRecordByteCount,
+                                            ulRecordCount, NULL, 0);
+            fprintf(pOutputFile, "%s%02X%06X%02X\n", SREC_COUNT_RECORD_S6,
+                    ucCountRecordByteCount, ulRecordCount, ucChecksum);
+        } 
+        else 
+        {
+            fprintf(stderr,
+                    "Error: Record count exceeds maximum for S5/S6 records\n");
+            blCountRecordSuccess = false;
+        }
     }
 
-    blCountRecordSuccess = true;
     return blCountRecordSuccess;
 }
 //****************************** WriteSrecTerminationRecord *******************
@@ -377,17 +390,17 @@ bool WriteSrecCountRecord(FILE* pOutputFile, uint32_t ulRecordCount)
 //*****************************************************************************
 bool WriteSrecTerminationRecord(FILE* pOutputFile) 
 {
-    bool blTerminationSuccess = false;
+    bool blTerminationSuccess = true;
     uint8_t ucTerminationByteCount = 0;
     uint8_t ucTerminationChecksum = 0;
 
     if(pOutputFile == NULL) 
     {
         fprintf(stderr, "Invalid output file for SrecTerminationRecord\n");
-        return blTerminationSuccess;
+        blTerminationSuccess = false;
     }
 
-    if (pOutputFile != NULL) 
+    if (blTerminationSuccess == true) 
     {
         /* Byte Count: Address (4 bytes) + Checksum (1 byte) */
         ucTerminationByteCount =
@@ -395,12 +408,10 @@ bool WriteSrecTerminationRecord(FILE* pOutputFile)
         ucTerminationChecksum = CalculateSrecChecksum(
             ucTerminationByteCount, SREC_DATA_RECORD_ADDR, NULL, 0);
 
-        /* Termination record format: [Type][Byte Count][Start
-         * Address][Checksum] */
         fprintf(pOutputFile, "%s%02X%08X%02X\n", SREC_TERMINATION_RECORD,
                 ucTerminationByteCount, SREC_DATA_RECORD_ADDR,
                 ucTerminationChecksum);
-        blTerminationSuccess = true;
+
     }
 
     return blTerminationSuccess;

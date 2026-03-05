@@ -26,6 +26,8 @@
 #define FILE_MODE_WRITE_BINARY "wb"
 #define FILE_MODE_WRITE_TEXT   "w"
 #define BYTE_SIZE               1 
+
+#define FORMAT_MSG              "Usage: -t <type> -i <input> -o <output>\n"
 //***************************** Global Variables ****************************** 
  
  typedef struct _ARGUMENTS_

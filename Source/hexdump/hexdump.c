@@ -32,9 +32,8 @@ static bool HexdumpDataWrite(FILE* pInputFile, FILE* pOutputFile);
 //           formatted output(hex values + ASCII equivalents) to the output file.
 // Inputs  : pucInput  - path to the input file 
 //           pucOutput - path to the output file 
-// Outputs : pucOutput file is created with the hexdump of pucInput.
-// Return  : bool - Returns true if the hexdump was successfully generated and 
-//           written to the output file, false otherwise.
+// Outputs : pucOutput - file is created with the hexdump of pucInput.
+// Return  : true if the hexdump was successfully generated false otherwise.
 // Notes   : None
 //*****************************************************************************
 bool HexdumpConvert(uint8_t* pucInput, uint8_t* pucOutput) 

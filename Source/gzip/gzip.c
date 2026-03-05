@@ -67,18 +67,13 @@ bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
 
     blSuccess = GzipDataCompress(pInput_file, pstOutput_file);
 
-    if(blSuccess == true) 
+    if(blSuccess == false) 
     {
-        fclose(pInput_file);
-        gzclose(pstOutput_file);
-    }
-    else
-    {   
         fprintf(stderr, "Error: gzip compression failed.\n");
-        fclose(pInput_file);
-        gzclose(pstOutput_file);
     }
 
+    fclose(pInput_file);
+    gzclose(pstOutput_file);
     return blSuccess;
 }
 

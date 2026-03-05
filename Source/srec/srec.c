@@ -137,6 +137,12 @@ bool SrecConvert(uint8_t* pucInput, uint8_t* pucOutput)
 //*****************************************************************************
 static void CloseFiles(FILE* pInputFile, FILE* pOutputFile)
 {
+    if(pInputFile == NULL || pOutputFile == NULL) 
+    {
+        fprintf(stderr, "Error: Invalid file pointers for closing files.\n");
+        return;
+    }
+
     fclose(pInputFile);
     fclose(pOutputFile);
 }
@@ -150,42 +156,51 @@ static void CloseFiles(FILE* pInputFile, FILE* pOutputFile)
 // Notes   : None
 //*****************************************************************************
 static bool WriteSrecRecords(FILE* pInputFile, FILE* pOutputFile,
-                             uint32_t* pulRecordCounter)
+                             uint32_t* pulRecordCnt)
 {
-    bool blSrecHeaderSuccess = false;
-    bool blSrecDataSuccess = false;
-    bool blSrecCountSuccess = false;
-    bool blSrecTerminationSuccess = false;
+    bool blSrecRecordSuccess = false;
 
-    blSrecHeaderSuccess = WriteSrecHeaderRecord(pOutputFile);
-    if (blSrecHeaderSuccess == false) 
+    if(pInputFile == NULL || pOutputFile == NULL || pulRecordCnt == NULL) 
+    {
+        fprintf(stderr, "Error: Invalid parameters for SrecRecords\n");
+        return blSrecRecordSuccess;
+    }
+
+    blSrecRecordSuccess = WriteSrecHeaderRecord(pOutputFile);
+
+    if (blSrecRecordSuccess == false) 
     {
         fprintf(stderr, "Error writing SREC header record\n");
-        return false;   
+        return blSrecRecordSuccess;   
     }
 
-    blSrecDataSuccess = WriteSrecDataRecord(pInputFile, pOutputFile,
-                                             pulRecordCounter);
-    if (blSrecDataSuccess == false) 
+    blSrecRecordSuccess = false;
+    blSrecRecordSuccess = WriteSrecDataRecord(pInputFile, pOutputFile,pulRecordCnt);
+
+    if (blSrecRecordSuccess == false) 
     {
         fprintf(stderr, "Error writing SREC data records\n");
-        return false;   
+        return blSrecRecordSuccess;   
     }
 
-    blSrecCountSuccess = WriteSrecCountRecord(pOutputFile, *pulRecordCounter);
-    if (blSrecCountSuccess == false) 
+    blSrecRecordSuccess = false;
+    blSrecRecordSuccess = WriteSrecCountRecord(pOutputFile, *pulRecordCnt);
+
+    if (blSrecRecordSuccess == false) 
     {
         fprintf(stderr, "Error writing SREC count record\n");
-        return false;   
+        return blSrecRecordSuccess;   
     }
 
-    blSrecTerminationSuccess = WriteSrecTerminationRecord(pOutputFile);
-    if (blSrecTerminationSuccess == false) 
+    blSrecRecordSuccess = false;
+    blSrecRecordSuccess = WriteSrecTerminationRecord(pOutputFile);
+
+    if (blSrecRecordSuccess == false) 
     {   
         fprintf(stderr, "Error writing SREC termination record\n");
-        return false;   
+        return blSrecRecordSuccess;   
     }    
-    return true;
+    return blSrecRecordSuccess;
 
 }
 //****************************** WriteSrecHeader ******************************
@@ -195,7 +210,7 @@ static bool WriteSrecRecords(FILE* pInputFile, FILE* pOutputFile,
 //           record is written.
 // Outputs : pucOutputFile - The file is updated with the S0 header record
 //           containing the project name. 
-// Return  : bool- true if the header was written successfully, false otherwise. 
+// Return  : true if the header was written successfully, false otherwise. 
 // Notes   : None
 //*****************************************************************************
 bool WriteSrecHeaderRecord(FILE* pOutputFile) 
@@ -205,10 +220,15 @@ bool WriteSrecHeaderRecord(FILE* pOutputFile)
     uint8_t ucHeaderChecksum = 0;
     uint8_t ucProjectNameLen = (uint8_t)strlen(pProjectName);
     uint8_t ucHederByteCount = 0;
-    ucHederByteCount = ucProjectNameLen + SREC_CHECKSUM_SIZE 
-                       + SREC_HEADER_ADDR_SIZE;
+    ucHederByteCount = ucProjectNameLen + SREC_CHECKSUM_SIZE + 
+                                            SREC_HEADER_ADDR_SIZE;
 
-    // Write S0 record header
+    if(pOutputFile == NULL) 
+    {
+        fprintf(stderr, "Error: Invalid output file for SrecHeaderRecord\n");
+        return blHeaderSuccess;
+    }
+
     fprintf(pOutputFile, "%s%02X", SREC_HEADER_RECORD_TYPE, ucHederByteCount);
     fprintf(pOutputFile, "%04X", SREC_HEADER_ADDR);
 
@@ -217,9 +237,8 @@ bool WriteSrecHeaderRecord(FILE* pOutputFile)
         fprintf(pOutputFile, "%02X", (uint8_t)pProjectName[ucIndex]);
     }
 
-    ucHeaderChecksum = CalculateSrecChecksum
-                      ( ucHederByteCount, 0, (uint8_t*)pProjectName, 
-                        ucProjectNameLen );
+    ucHeaderChecksum = CalculateSrecChecksum ( ucHederByteCount, 0, 
+                            (uint8_t*)pProjectName, ucProjectNameLen );
 
     fprintf(pOutputFile, "%02X\n", ucHeaderChecksum);
     blHeaderSuccess = true;
@@ -236,7 +255,7 @@ bool WriteSrecHeaderRecord(FILE* pOutputFile)
 //           data from the input file.
 //           pulRecordCounter - Updated with the total number of S3 records
 //           written to the output file.
-// Return  : bool - true if all records were written successfully else false. 
+// Return  : true if all records were written successfully else false. 
 // Notes   : Each record includes a type, byte count, address, hex-encoded data, 
 //           and a checksum.
 //*****************************************************************************
@@ -253,9 +272,10 @@ bool WriteSrecDataRecord(FILE* pInputFile, FILE* pOutputFile,
 
     if (pInputFile == NULL || pOutputFile == NULL || pulRecordCounter == NULL) 
     {
-        fprintf(stderr, "Invalid parameters for WriteSrecDataRecord\n");
+        fprintf(stderr, "Invalid parameters for SrecDataRecord\n");
         return blDataRecordSuccess;
     }
+
     while (true) 
     {
         ulBytesRead = fread(ucBuffer, 1, sizeof(ucBuffer), pInputFile);
@@ -304,7 +324,7 @@ bool WriteSrecDataRecord(FILE* pInputFile, FILE* pOutputFile,
 // Inputs  : pOutputFile  - Pointer to the destination SREC text file.
 //           ulRecordCount- The total number of S3 records written.
 // Outputs : pOutputFile - The file is updated with an S5 or S6 record
-// containing the count of data records. 
+//                         containing the count of data records. 
 // Return  : bool - true if the record was written successfully, false otherwise.
 // Notes   : S5 is used for 16-bit counts (up to 65,535).
 //           S6 is used for 24-bit counts (up to 16,777,215).
@@ -352,7 +372,7 @@ bool WriteSrecCountRecord(FILE* pOutputFile, uint32_t ulRecordCount)
 //           termination record to the output file. 
 // Inputs  : pOutputFile - Pointer to the destination SREC text file. 
 // Outputs : pOutputFile - The file is updated with an S7 termination record . 
-// Return  : bool - true if the record was written successfully, false otherwise. 
+// Return  : true if the record was written successfully, false otherwise. 
 // Notes   : None
 //*****************************************************************************
 bool WriteSrecTerminationRecord(FILE* pOutputFile) 
@@ -360,6 +380,12 @@ bool WriteSrecTerminationRecord(FILE* pOutputFile)
     bool blTerminationSuccess = false;
     uint8_t ucTerminationByteCount = 0;
     uint8_t ucTerminationChecksum = 0;
+
+    if(pOutputFile == NULL) 
+    {
+        fprintf(stderr, "Invalid output file for SrecTerminationRecord\n");
+        return blTerminationSuccess;
+    }
 
     if (pOutputFile != NULL) 
     {

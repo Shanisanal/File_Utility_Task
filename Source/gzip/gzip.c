@@ -88,20 +88,20 @@ bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
 // Inputs  : pucInput  - Path to the source file to be compressed.
 //           pucOutput - Path where the .gz file will be created.
 // Outputs : pucOutput file is created with gzip-compressed data from pucInput.
-// Return  : bool - true if files were compressed successfully, else false.
+// Return  : true if files were compressed successfully, else false.
 // Notes   : None
 //*****************************************************************************
-static bool GzipDataCompress(FILE* pInput_file, gzFile pstOutput_file)
+static bool GzipDataCompress(FILE* pInputfile, gzFile pstOutputfile)
 {
     bool blDataCompressionSuccess = false;
     uint8_t ucBuffer[GZIP_BUFFER_SIZE] = {0};
     uint32_t  ulBytesRead = 0;
     while(true)
     {
-        ulBytesRead = fread(ucBuffer, BYTE_SIZE, sizeof(ucBuffer), pInput_file);
+        ulBytesRead = fread(ucBuffer, BYTE_SIZE, sizeof(ucBuffer), pInputfile);
         if (ulBytesRead == 0) 
         {
-            if (feof(pInput_file)) 
+            if (feof(pInputfile)) 
             {
                 blDataCompressionSuccess = true;
                 break; 
@@ -114,7 +114,7 @@ static bool GzipDataCompress(FILE* pInput_file, gzFile pstOutput_file)
             }
         }
     
-        if (gzwrite(pstOutput_file, ucBuffer, ulBytesRead) != (int)ulBytesRead)
+        if (gzwrite(pstOutputfile, ucBuffer, ulBytesRead) != (int)ulBytesRead)
         {
             fprintf(stderr, "Error writing compressed data");
             blDataCompressionSuccess = false;

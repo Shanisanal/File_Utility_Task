@@ -59,6 +59,7 @@ bool HexdumpConvert(uint8_t* pucInput, uint8_t* pucOutput)
  
     if (pOutputFile == NULL) 
     { 
+        fprintf(stderr, "Error opening output file.\n"); 
         fclose(pInputFile); 
         return blSuccess; 
     }
@@ -68,16 +69,10 @@ bool HexdumpConvert(uint8_t* pucInput, uint8_t* pucOutput)
     if(blSuccess == false) 
     {
         fprintf(stderr, "Error generating hexdump.\n");
-        fclose(pInputFile);
-        fclose(pOutputFile);
-        return blSuccess;
-    }
-    else
-    {   
-        fclose(pInputFile);
-        fclose(pOutputFile);
     }
 
+    fclose(pInputFile);
+    fclose(pOutputFile);
     return blSuccess;
 }
 
@@ -85,9 +80,8 @@ bool HexdumpConvert(uint8_t* pucInput, uint8_t* pucOutput)
 // Purpose : writes a formatted hexdump representation to the output text file
 // Inputs  : pucInput  - path to the input file 
 //           pucOutput - path to the output file 
-// Outputs : pucOutput file is created with the hexdump of pucInput.
-// Return  : bool - Returns true if the hexdump was successfully generated and 
-//           written to the output file, false otherwise.
+// Outputs : pucOutput - file is created with the hexdump of pucInput.
+// Return  : Returns true if the hexdump was generated false otherwise.
 // Notes   : None
 //*****************************************************************************
 static bool HexdumpDataWrite(FILE* pInputFile, FILE* pOutputFile)
@@ -96,6 +90,7 @@ static bool HexdumpDataWrite(FILE* pInputFile, FILE* pOutputFile)
     uint32_t ulBytesRead = 0;
     uint32_t ulOffset = 0;
     bool  blHexdumpWriteSuccess = false;
+
     while(true)
     {
         ulBytesRead = fread(ucbuffer, BYTE_SIZE, sizeof(ucbuffer), pInputFile);
@@ -109,18 +104,17 @@ static bool HexdumpDataWrite(FILE* pInputFile, FILE* pOutputFile)
             } 
             else 
             {
-                fprintf(stderr, "Error reading input file");
                 blHexdumpWriteSuccess = false;
                 break;
             }
         }
         fprintf(pOutputFile, "%08x  ", ulOffset);
 
-        for (uint32_t ulIndex = 0; ulIndex < HEXDUMP_BYTES_PER_LINE; ulIndex++) 
+        for (uint8_t ucIndex = 0; ucIndex < HEXDUMP_BYTES_PER_LINE; ucIndex++) 
         {
-            if (ulIndex < ulBytesRead)
+            if (ucIndex < ulBytesRead)
             {
-               fprintf(pOutputFile, "%02x ", ucbuffer[ulIndex]);
+               fprintf(pOutputFile, "%02x ", ucbuffer[ucIndex]);
             }
             else
             {

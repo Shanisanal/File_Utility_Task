@@ -40,48 +40,57 @@ static bool GzipDataCompress(FILE* pInput_file, gzFile pstOutput_file);
 //*****************************************************************************
 bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
 {
-    bool blSuccess = false;
-    gzFile pstOutput_file = NULL;
+    bool blSuccess = true;
+    gzFile pstOutputfile = NULL;
+    FILE* pInputfile = NULL;
 
     if(pucInput == NULL || pucOutput == NULL) 
     {
         fprintf(stderr, "Error: Input and output file paths NULL.\n");
-        return blSuccess;
+        blSuccess = false;
     }
 
-    FILE* pInput_file  = fopen((const char *)pucInput, FILE_MODE_READ_BINARY);
-    pstOutput_file = gzopen((const char *)pucOutput, FILE_MODE_WRITE_BINARY);
-
-    if (pInput_file == NULL) 
-    { 
-        fprintf(stderr, "Error opening input file.\n"); 
-        return blSuccess; 
-    }
- 
-    if (pstOutput_file == NULL) 
-    { 
-        fprintf(stderr, "Error opening output file for gzip compression\n");      
-        fclose(pInput_file); 
-        return blSuccess; 
-    }
-
-    blSuccess = GzipDataCompress(pInput_file, pstOutput_file);
-
-    if(blSuccess == false) 
+    if(blSuccess == true)
     {
-        fprintf(stderr, "Error: gzip compression failed.\n");
+            FILE* pInputfile  = fopen((const char *)pucInput, FILE_MODE_READ_BINARY);
+    
+            if (pInputfile == NULL) 
+            { 
+                fprintf(stderr, "Error opening input file.\n"); 
+                blSuccess = false; 
+            }
     }
 
-    fclose(pInput_file);
-    gzclose(pstOutput_file);
+    if(blSuccess == true)
+    {
+        pstOutputfile = gzopen((const char *)pucOutput, FILE_MODE_WRITE_BINARY);
+ 
+        if (pstOutputfile == NULL) 
+        { 
+            fprintf(stderr, "Error opening output file for gzip compression\n");      
+            blSuccess = false; 
+        }
+    }
+
+    if(blSuccess == true)
+    {
+        blSuccess = GzipDataCompress(pInputfile, pstOutputfile);
+
+        if(blSuccess == false) 
+        {
+            fprintf(stderr, "Error: gzip compression failed.\n");
+        }
+    }
+
+    fclose(pInputfile);
+    gzclose(pstOutputfile);
     return blSuccess;
 }
 
 //****************************** GzipDataCompress ********************************
-// Purpose : Orchestrates the file compression process by managing file
-//           resources and dispatching the data compression pump.
-// Inputs  : pucInput  - Path to the source file to be compressed.
-//           pucOutput - Path where the .gz file will be created.
+// Purpose : Performs the file compression process 
+// Inputs  : pucInput  - Pointer to the input file.
+//           pucOutput - Pointer to the output file.
 // Outputs : pucOutput file is created with gzip-compressed data from pucInput.
 // Return  : true if files were compressed successfully, else false.
 // Notes   : None

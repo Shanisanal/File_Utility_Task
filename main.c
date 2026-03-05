@@ -33,7 +33,7 @@
 //****************************** main ******************************************
 // Purpose : Entry point for the file utility application.
 // Inputs  : lArgCount  - total number of command-line arguments
-//           pcArgv[] - array of argument strings
+//           pcArgv[] - pointer to array of argument strings
 // Outputs : None
 // Return  : Returns 0 upon successful completion,
 // Notes   : None

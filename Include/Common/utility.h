@@ -39,7 +39,7 @@
 
 //**************************** Forward Declarations *************************** 
 bool ExecuteApplication(int lArgCount, char* pcArgv[]);
-bool ParseArguments(uint16_t unArgCount, char* pcArgv[],ARGUMENTS* pstArguments);
+bool ParseArguments(int lArgCount, char* pcArgv[],ARGUMENTS* pstArguments);
 bool RunUtility(ARGUMENTS* pstArguments) ;
 
 //*********************** Inline Method Implementations *********************** 

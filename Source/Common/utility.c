@@ -33,9 +33,8 @@
 #define ARG_TYPE_HEXDUMP        "hexdump"
 #define ARG_TYPE_SREC           "srec"
 
-#define FORMAT_MSG              "Usage: -t <type> -i <input> -o <output>\n"
-
 #define CONVERTER_COUNT (sizeof(sstConversionMap) / sizeof(sstConversionMap[0]))
+
 //***************************** Local Variables ******************************* 
 typedef bool (*pFileConverter)(uint8_t* pucInput, uint8_t* pucOutput);
 
@@ -59,15 +58,17 @@ typedef enum
     ARG_INPUT_FILENAME,
     ARG_OUTPUT_FILENAME
 } ARG_FLAG;
+
 //****************************** Local Functions ******************************/
 static ARG_FLAG GetArgumentFlag(const char* pcArg) ;
+static bool ValidateArgumentType(uint8_t* pucArgumentType) ;
 
 //****************************** ExecuteApplication ***************************
 // Purpose : Manages the application lifecycle from parsing to execution.
 // Inputs  : lArgCount  - total number of command-line arguments
 //           pcArgv[] - pointer to array of argument strings
 // Outputs : None
-// Return  : bool - Returns true if execution was successful, false otherwise
+// Return  : Returns true if execution was successful, false otherwise
 // Notes   : Calls ParseArguments and RunUtility functions.
 //*****************************************************************************
 bool ExecuteApplication(int lArgCount, char* pcArgv[])
@@ -141,7 +142,12 @@ bool ParseArguments(uint16_t unArgCount, char* pcArgv[],ARGUMENTS* pstArguments)
             case ARG_TYPE:
             {
                 pstArguments->pucArgumentType = (uint8_t*)pcArgv[unIndex + 1];
-                blTypeFound = true;
+                blTypeFound = ValidateArgumentType(pstArguments->pucArgumentType);
+                if(blTypeFound == false) 
+                {
+                    fprintf(stderr, "Error: Invalid argument type \n");
+                    return blTypeFound;
+                }
                 break;
             }
             case ARG_INPUT_FILENAME:
@@ -157,10 +163,43 @@ bool ParseArguments(uint16_t unArgCount, char* pcArgv[],ARGUMENTS* pstArguments)
                 break;
             }
             default:
+            {
                 break;
+            }
         }
     }
     return blTypeFound;
+}
+//****************************** ValidateArgumentType **************************
+// Purpose : Validates the argument type against a list of supported types.
+// Inputs  : pucArgumentType - pointer to the argument type string
+// Outputs : None
+// Return  : bool - true if the argument type is valid, false otherwise
+// Notes   : 
+//   - Checks against a predefined list of supported conversion types.
+//*****************************************************************************
+static bool ValidateArgumentType(uint8_t* pucArgumentType) 
+{
+    bool blIsValidType = false;
+
+    if(pucArgumentType == NULL) 
+    {
+        blIsValidType = false;
+    }
+    
+    if(pucArgumentType != NULL) 
+    {
+        for(uint32_t ulIndex = 0; ulIndex < CONVERTER_COUNT; ulIndex++) 
+        {
+            if (strcmp((char *)pucArgumentType, 
+                       (char *)sstConversionMap[ulIndex].pcConversionType) == 0) 
+            {
+                blIsValidType = true;
+                break;
+            }
+        }
+    }
+    return blIsValidType;
 }
 
 //****************************** GetArgumentFlag *******************************

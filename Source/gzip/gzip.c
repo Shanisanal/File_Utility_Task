@@ -29,13 +29,13 @@
 //****************************** Local Functions ******************************
 static bool GzipDataCompress(FILE* pInput_file, gzFile pstOutput_file);
 
-//****************************** GzipConvert ******************************
+//****************************** GzipConvert **********************************
 // Purpose : Compresses an input file using the gzip format and writes
 //           the compressed data to the specified output file.
 // Inputs  : pInput  - path to the input file (const char*)
 //           pOutput - path to the output file (const char*)
-// Outputs : Creates a gzip-compressed file at the given output path.
-// Return  : bool- Returns true if the compression was successful, else false. 
+// Outputs : pOutput - Creates a gzip-compressed file at the given output path.
+// Return  : true if the compression was successful, else false. 
 // Notes   : Uses zlib's gzopen/gzwrite to perform compression.
 //*****************************************************************************
 bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
@@ -55,7 +55,6 @@ bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
     if (pInput_file == NULL) 
     { 
         fprintf(stderr, "Error opening input file.\n"); 
-        blSuccess = false;
         return blSuccess; 
     }
  
@@ -63,21 +62,19 @@ bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
     { 
         fprintf(stderr, "Error opening output file for gzip compression\n");      
         fclose(pInput_file); 
-        blSuccess = false;
         return blSuccess; 
     }
 
     blSuccess = GzipDataCompress(pInput_file, pstOutput_file);
 
-    if(blSuccess == false) 
+    if(blSuccess == true) 
     {
-        fprintf(stderr, "Error: gzip compression failed.\n");
         fclose(pInput_file);
         gzclose(pstOutput_file);
-        return blSuccess;
     }
     else
     {   
+        fprintf(stderr, "Error: gzip compression failed.\n");
         fclose(pInput_file);
         gzclose(pstOutput_file);
     }

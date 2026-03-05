@@ -12,13 +12,11 @@
 //*****************************************************************************
 
 //******************************* Include Files *******************************
-#include "srec/srec.h"
-
 #include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-
+#include "srec/srec.h"
 #include "Common/utility.h"
 
 //******************************* Local Types *********************************
@@ -60,7 +58,7 @@ static bool WriteSrecRecords(FILE* pInputFile, FILE* pOutputFile,
 //           pucData   - Pointer to the buffer containing the raw data bytes.
 //           DataLen - The number of data bytes in the current record.
 // Outputs : None.
-// Return  : uint8_t - The 8-bit checksum value.
+// Return  : The checksum value calculated.
 // Notes   : None
 //*****************************************************************************
 uint8_t CalculateSrecChecksum(uint8_t ucCount, uint32_t ulAddr,uint8_t* pucData,
@@ -87,7 +85,7 @@ uint8_t CalculateSrecChecksum(uint8_t ucCount, uint32_t ulAddr,uint8_t* pucData,
 //           pucOutput - Path to the output text file where SREC data is saved.
 // Outputs : pucOutput - The file is created with SREC formatted records
 //           representing the binary data from the input file. 
-// Return  : None 
+// Return  : true if the SREC conversion was successful false otherwise. 
 // Notes   : None
 //*****************************************************************************
 bool SrecConvert(uint8_t* pucInput, uint8_t* pucOutput) 
@@ -109,14 +107,12 @@ bool SrecConvert(uint8_t* pucInput, uint8_t* pucOutput)
     if (pInputFile == NULL) 
     {
         fprintf(stderr, "Error opening input file.\n");
-        blSuccess = false;
         return blSuccess;
     }
 
     if (pOutputFile == NULL) 
     {
         fclose(pInputFile);
-        blSuccess = false;
         return blSuccess;
     }
     /* SREC Record Header + Data Records + Count Records + Termination Record */
@@ -125,23 +121,21 @@ bool SrecConvert(uint8_t* pucInput, uint8_t* pucOutput)
     if (blSuccess == false) 
     {
         fprintf(stderr, "Error writing SREC records.\n");
-        CloseFilesOnError(pInputFile, pOutputFile);
-        return blSuccess;
     }
 
-    CloseFilesOnError(pInputFile, pOutputFile);
+    CloseFiles(pInputFile, pOutputFile);
     return blSuccess;
 }
 
-//************************** CloseFilesOnError ******************************
-// Purpose : Closes input and output files and sets success flag to false.
+//************************** CloseFiles********* ******************************
+// Purpose : Closes input and output files .
 // Inputs  : pInputFile  - Pointer to input file to close.
 //           pOutputFile - Pointer to output file to close.
 // Outputs : None
 // Return  : None
 // Notes   : None
 //*****************************************************************************
-static void CloseFilesOnError(FILE* pInputFile, FILE* pOutputFile)
+static void CloseFiles(FILE* pInputFile, FILE* pOutputFile)
 {
     fclose(pInputFile);
     fclose(pOutputFile);
@@ -152,7 +146,7 @@ static void CloseFilesOnError(FILE* pInputFile, FILE* pOutputFile)
 //           pOutputFile    - Pointer to output SREC file.
 //           pulRecordCounter - Pointer to record counter.
 // Outputs : pOutputFile - Updated with all SREC records.
-// Return  : bool - true if all records written successfully, false otherwise.
+// Return  : true if all records written successfully, false otherwise.
 // Notes   : None
 //*****************************************************************************
 static bool WriteSrecRecords(FILE* pInputFile, FILE* pOutputFile,

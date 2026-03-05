@@ -35,7 +35,7 @@
 // Inputs  : lArgCount  - total number of command-line arguments
 //           pcArgv[] - array of argument strings
 // Outputs : None
-// Return  : int - Returns 0 upon successful completion,
+// Return  : Returns 0 upon successful completion,
 // Notes   : None
 //*****************************************************************************
 int main(int lArgCount, char* pcArgv[]) 
@@ -50,15 +50,15 @@ int main(int lArgCount, char* pcArgv[])
 
     blExecutionResult = ExecuteApplication(lArgCount, pcArgv);
 
-    if (blExecutionResult == false) 
+    if (blExecutionResult == true) 
     {
-        fprintf(stderr, "Application execution failed.\n");
-        return 1;
+        fprintf(stderr, "Application executed successfully.\n");
+        return 0;
     }
     else
     {
-        fprintf(stdout, "Application executed successfully.\n");
-        return 0;
+        fprintf(stdout, "Application execution failed.\n");
+        return 1;
     }
 
     return 0;

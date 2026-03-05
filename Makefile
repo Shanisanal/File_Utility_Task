@@ -6,7 +6,7 @@ LDFLAGS = -lz   # link zlib if needed
 
 # Project structure
 SRC_DIR = src
-INC_DIR = include
+INC_DIR = Include
 RELEASE_DIR = release
 DEBUG_DIR = debug
 

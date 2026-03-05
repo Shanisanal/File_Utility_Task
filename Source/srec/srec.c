@@ -46,7 +46,7 @@
 //***************************** Local Variables *******************************/
 
 //****************************** Local Functions ******************************/
-static void CloseFilesOnError(FILE* pInputFile, FILE* pOutputFile);
+static void CloseFiles(FILE* pInputFile, FILE* pOutputFile);
 static bool WriteSrecRecords(FILE* pInputFile, FILE* pOutputFile,
                              uint32_t* pulRecordCounter);
 

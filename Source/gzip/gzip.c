@@ -86,12 +86,8 @@ bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
     {
         fclose(pInputfile);
     }
-    
-    if(pstOutputfile != NULL) 
-    {
-        gzclose(pstOutputfile);
-    }
 
+    gzclose(pstOutputfile);
     return blSuccess;
 }
 

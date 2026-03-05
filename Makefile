@@ -1,6 +1,6 @@
 # Compiler and flags
 CC = gcc
-CFLAGS = -Wall -Wextra -O2
+CFLAGS = -Wall -Wextra -O2 -I$(INC_DIR)
 DEBUGFLAGS = -Wall -Wextra -g
 LDFLAGS = -lz   # link zlib if needed
 

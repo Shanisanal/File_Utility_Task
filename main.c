@@ -42,6 +42,12 @@ int main(int lArgCount, char* pcArgv[])
 {
     bool blExecutionResult = false;
 
+    if (lArgCount <= 1 || pcArgv == NULL) 
+    {
+        fprintf(stderr, FORMAT_MSG);
+        return 1;
+    }
+
     blExecutionResult = ExecuteApplication(lArgCount, pcArgv);
 
     if (blExecutionResult == false) 

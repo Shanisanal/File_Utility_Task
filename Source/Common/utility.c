@@ -216,7 +216,7 @@ static ARG_FLAG GetArgumentFlag(const char* pcArg)
     {
         return ARG_INVALID;
     }
-    
+
     if (strcmp(pcArg, ARG_TYPE_FLAG) == 0) 
     {
         return ARG_TYPE;
@@ -241,7 +241,7 @@ static ARG_FLAG GetArgumentFlag(const char* pcArg)
 //           required parameters and calls the appropriate processing function
 // Inputs  : pstArguments - pointer to ARGUMENTS structure
 // Outputs : None
-// Return  : None 
+// Return  : true if utility executed successfully, false otherwise 
 // Notes   : 
 //   - Currently supports "gzip", "hexdump", and "srec" types.
 //   - Displays error if unsupported type is provided.
@@ -256,7 +256,6 @@ bool RunUtility(ARGUMENTS* pstArguments)
         pstArguments->pucOutputFileName == NULL) 
     {
         fprintf(stderr, "Error: Missing required arguments. %s", FORMAT_MSG);
-        blConvertSuccess = false;
         return blConvertSuccess;
     }
 

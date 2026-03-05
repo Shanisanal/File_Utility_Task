@@ -54,14 +54,12 @@ bool HexdumpConvert(uint8_t* pucInput, uint8_t* pucOutput)
     if (pInputFile == NULL) 
     { 
         fprintf(stderr, "Error opening input file.\n"); 
-        blSuccess = false;
         return blSuccess; 
     }
  
     if (pOutputFile == NULL) 
     { 
         fclose(pInputFile); 
-        blSuccess = false;
         return blSuccess; 
     }
 

@@ -96,9 +96,11 @@ static bool GzipDataCompress(FILE* pInputfile, gzFile pstOutputfile)
     bool blDataCompressionSuccess = false;
     uint8_t ucBuffer[GZIP_BUFFER_SIZE] = {0};
     uint32_t  ulBytesRead = 0;
+    
     while(true)
     {
         ulBytesRead = fread(ucBuffer, BYTE_SIZE, sizeof(ucBuffer), pInputfile);
+
         if (ulBytesRead == 0) 
         {
             if (feof(pInputfile)) 

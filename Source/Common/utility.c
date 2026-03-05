@@ -64,7 +64,7 @@ static ARG_FLAG GetArgumentFlag(const char* pcArg) ;
 static bool ValidateArgumentType(uint8_t* pucArgumentType) ;
 
 //****************************** ExecuteApplication ***************************
-// Purpose : Manages the application lifecycle from parsing to execution.
+// Purpose : Parses arguments and executes the appropriate utility function.
 // Inputs  : lArgCount  - total number of command-line arguments
 //           pcArgv[] - pointer to array of argument strings
 // Outputs : None

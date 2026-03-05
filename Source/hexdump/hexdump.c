@@ -38,39 +38,48 @@ static bool HexdumpDataWrite(FILE* pInputFile, FILE* pOutputFile);
 //*****************************************************************************
 bool HexdumpConvert(uint8_t* pucInput, uint8_t* pucOutput) 
 {
-    bool blSuccess = false;
+    bool blSuccess = true;
     FILE* pInputFile = NULL;
     FILE* pOutputFile = NULL;
 
     if(pucInput == NULL || pucOutput == NULL) 
     {
         fprintf(stderr, "Error: Input and output file paths NULL.\n");
-        return blSuccess;
+        blSuccess = false;
+    }
+
+    if(blSuccess == true)
+    {
+        pInputFile = fopen((const char*)pucInput, FILE_MODE_READ_BINARY);
+        
+        if (pInputFile == NULL) 
+        { 
+            fprintf(stderr, "Error opening input file.\n"); 
+            blSuccess = false; 
+        }
+    }
+
+    if(blSuccess == true)
+    {
+        pOutputFile = fopen((const char*)pucOutput, FILE_MODE_WRITE_TEXT);
+
+        if (pOutputFile == NULL) 
+        { 
+            fprintf(stderr, "Error opening output file.\n"); 
+            blSuccess = false; 
+        }
     }
     
-    pInputFile = fopen((const char*)pucInput, FILE_MODE_READ_BINARY);
-    pOutputFile = fopen((const char*)pucOutput, FILE_MODE_WRITE_TEXT);
+    if(blSuccess == true)
+    {   
+        blSuccess = HexdumpDataWrite(pInputFile, pOutputFile);
 
-    if (pInputFile == NULL) 
-    { 
-        fprintf(stderr, "Error opening input file.\n"); 
-        return blSuccess; 
+        if(blSuccess == false) 
+        {
+            fprintf(stderr, "Error generating hexdump.\n");
+        }
     }
  
-    if (pOutputFile == NULL) 
-    { 
-        fprintf(stderr, "Error opening output file.\n"); 
-        fclose(pInputFile); 
-        return blSuccess; 
-    }
-
-    blSuccess = HexdumpDataWrite(pInputFile, pOutputFile);
-
-    if(blSuccess == false) 
-    {
-        fprintf(stderr, "Error generating hexdump.\n");
-    }
-
     fclose(pInputFile);
     fclose(pOutputFile);
     return blSuccess;
@@ -78,10 +87,10 @@ bool HexdumpConvert(uint8_t* pucInput, uint8_t* pucOutput)
 
 //****************************** HexdumpDataWrite ******************************
 // Purpose : writes a formatted hexdump representation to the output text file
-// Inputs  : pucInput  - path to the input file 
-//           pucOutput - path to the output file 
+// Inputs  : pucInput  - pointer to the input file 
+//           pucOutput - pointer to the output file 
 // Outputs : pucOutput - file is created with the hexdump of pucInput.
-// Return  : Returns true if the hexdump was generated false otherwise.
+// Return  : True if the hexdump was generated false otherwise.
 // Notes   : None
 //*****************************************************************************
 static bool HexdumpDataWrite(FILE* pInputFile, FILE* pOutputFile)

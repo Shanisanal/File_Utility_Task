@@ -104,7 +104,7 @@ static bool GzipDataCompress(FILE* pInputfile, gzFile pstOutputfile)
 {
     bool blDataCompressionSuccess = true;
     uint8_t ucBuffer[GZIP_BUFFER_SIZE] = {0};
-    uint32_t  ulBytesRead = 0;
+    uint16_t  unBytesRead = 0;
 
     if(pInputfile == NULL || pstOutputfile == NULL) 
     {
@@ -116,11 +116,11 @@ static bool GzipDataCompress(FILE* pInputfile, gzFile pstOutputfile)
     {
         while(true)
         {
-            ulBytesRead = fread(ucBuffer, BYTE_SIZE, sizeof(ucBuffer), pInputfile);
+            unBytesRead = fread(ucBuffer, BYTE_SIZE, sizeof(ucBuffer), pInputfile);
 
-            if (ulBytesRead == 0) 
+            if (unBytesRead == 0) 
             {
-                if (feof(pInputfile)) 
+                if (feof(pInputfile) == 1) 
                 {
                     blDataCompressionSuccess = true;
                     break; 
@@ -133,7 +133,7 @@ static bool GzipDataCompress(FILE* pInputfile, gzFile pstOutputfile)
                 }
             }
         
-            if (gzwrite(pstOutputfile, ucBuffer, ulBytesRead) != (int)ulBytesRead)
+            if (gzwrite(pstOutputfile, ucBuffer, unBytesRead) != (int)unBytesRead)
             {
                 fprintf(stderr, "Error writing compressed data");
                 blDataCompressionSuccess = false;

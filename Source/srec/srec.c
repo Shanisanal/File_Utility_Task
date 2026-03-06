@@ -244,7 +244,7 @@ bool WriteSrecHeaderRecord(FILE* pOutputFile)
             fprintf(pOutputFile, "%02X", (uint8_t)pProjectName[ucIndex]);
         }
 
-        ucHeaderChecksum = CalculateSrecChecksum ( ucHederByteCount, 0, 
+        ucHeaderChecksum = CalculateSrecChecksum ( ucHederByteCount,SREC_HEADER_ADDR, 
                                 (uint8_t*)pProjectName, ucProjectNameLen );
 
         fprintf(pOutputFile, "%02X\n", ucHeaderChecksum);
@@ -272,7 +272,7 @@ bool WriteSrecDataRecord(FILE* pInputFile, FILE* pOutputFile,
 {
     bool blDataRecordSuccess = true;
     uint8_t ucBuffer[SREC_DATA_PER_LINE] = {0};
-    uint32_t ulBytesRead = 0;
+    uint8_t ucBytesRead = 0;
     uint32_t ulAddress = SREC_DATA_RECORD_ADDR;
     uint32_t ulCounter = 0;
     uint8_t ucDataRecordByteCount = 0;
@@ -288,11 +288,11 @@ bool WriteSrecDataRecord(FILE* pInputFile, FILE* pOutputFile,
     {
         while (true) 
         {
-            ulBytesRead = fread(ucBuffer, 1, sizeof(ucBuffer), pInputFile);
+            ucBytesRead = fread(ucBuffer, 1, sizeof(ucBuffer), pInputFile);
 
-            if (ulBytesRead == 0) 
+            if (ucBytesRead == 0) 
             {
-                if (feof(pInputFile)) 
+                if (feof(pInputFile) == 1) 
                 {
                     break;
                 } 
@@ -304,22 +304,22 @@ bool WriteSrecDataRecord(FILE* pInputFile, FILE* pOutputFile,
             }
             //Calculate ByteCount = Address(4 bytes) + Data  + Checksum(1 byte)
             ucDataRecordByteCount = (uint8_t)(SREC_DATA_RECORD_ADDR_SIZE +
-                                            ulBytesRead + SREC_CHECKSUM_SIZE);
+                                            ucBytesRead + SREC_CHECKSUM_SIZE);
             ucDataChecksum = CalculateSrecChecksum(ucDataRecordByteCount, ulAddress,
-                                                ucBuffer, ulBytesRead);
+                                                ucBuffer, ucBytesRead);
 
             // Format: S3 [ Byte Count] [4 byte Address] [Data] [Checksum]
             fprintf(pOutputFile, "%s%02X%08X", SREC_DATA_RECORD_TYPE,
                     ucDataRecordByteCount, ulAddress);
 
-            for (uint32_t ulIndex = 0; ulIndex < ulBytesRead; ulIndex++) 
+            for (uint8_t ucIndex = 0; ucIndex < ucBytesRead; ucIndex++) 
             {
-                fprintf(pOutputFile, "%02X", ucBuffer[ulIndex]);
+                fprintf(pOutputFile, "%02X", ucBuffer[ucIndex]);
             }
             fprintf(pOutputFile, "%02X\n", ucDataChecksum);
 
             // Increment the address for the next line
-            ulAddress += ulBytesRead;
+            ulAddress += ucBytesRead;
             ulCounter++;
         }
 

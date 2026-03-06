@@ -91,6 +91,7 @@ bool ExecuteApplication(int lArgCount, char* pcArgv[])
         fprintf(stderr, FORMAT_MSG);
         blConversionResult = false;
     }
+
     if(blConversionResult == true) 
     {
         blConversionResult = ParseArguments(lArgCount, pcArgv, &stArguments);
@@ -137,7 +138,7 @@ bool ParseArguments(int lArgCount, char* pcArgv[],ARGUMENTS* pstArguments)
 
     if(blTypeFound == true)
     {
-        for (int lIndex = 1; (lIndex < lArgCount); lIndex += 2) 
+        for (int lIndex = 1; (lIndex < lArgCount); lIndex ++) 
         {
             if (lIndex + 1 < lArgCount) 
             {
@@ -146,6 +147,7 @@ bool ParseArguments(int lArgCount, char* pcArgv[],ARGUMENTS* pstArguments)
                 if (eFlag > ARG_INVALID ) 
                 {
                     blTypeFound = sstArgHandlers[eFlag](pstArguments, pcArgv[lIndex + 1]);
+                    lIndex++; 
                 }
                 else 
                 {
@@ -155,7 +157,7 @@ bool ParseArguments(int lArgCount, char* pcArgv[],ARGUMENTS* pstArguments)
             }
             else 
             {
-                fprintf(stderr, "Error: Flag '%s' is missing a value\n", pcArgv[lIndex]);
+                fprintf(stderr, "Error: Argument '%s' is missing a value\n", pcArgv[lIndex]);
                 blTypeFound = false;
             }
         }

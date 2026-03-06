@@ -96,17 +96,17 @@ bool HexdumpConvert(uint8_t* pucInput, uint8_t* pucOutput)
 static bool HexdumpDataWrite(FILE* pInputFile, FILE* pOutputFile)
 {
     uint8_t ucbuffer[HEXDUMP_BYTES_PER_LINE] = {0};
-    uint32_t ulBytesRead = 0;
+    uint8_t ucBytesRead = 0;
     uint32_t ulOffset = 0;
     bool  blHexdumpWriteSuccess = false;
 
     while(true)
     {
-        ulBytesRead = fread(ucbuffer, BYTE_SIZE, sizeof(ucbuffer), pInputFile);
+        ucBytesRead = fread(ucbuffer, BYTE_SIZE, sizeof(ucbuffer), pInputFile);
 
-        if (ulBytesRead == 0) 
+        if (ucBytesRead == 0) 
         {
-            if (feof(pInputFile)) 
+            if (feof(pInputFile) == 1) 
             {
                 blHexdumpWriteSuccess = true;
                 break; 
@@ -121,7 +121,7 @@ static bool HexdumpDataWrite(FILE* pInputFile, FILE* pOutputFile)
 
         for (uint8_t ucIndex = 0; ucIndex < HEXDUMP_BYTES_PER_LINE; ucIndex++) 
         {
-            if (ucIndex < ulBytesRead)
+            if (ucIndex < ucBytesRead)
             {
                fprintf(pOutputFile, "%02x ", ucbuffer[ucIndex]);
             }
@@ -132,13 +132,13 @@ static bool HexdumpDataWrite(FILE* pInputFile, FILE* pOutputFile)
         }
         fprintf(pOutputFile, " |");
 
-        for (uint32_t ulIndex = 0; ulIndex < ulBytesRead; ulIndex++) 
+        for (uint8_t ucIndex = 0; ucIndex < ucBytesRead; ucIndex++) 
         {
             fprintf(pOutputFile, "%c", 
-                    isprint(ucbuffer[ulIndex]) ? ucbuffer[ulIndex] : '.');
+                    isprint(ucbuffer[ucIndex]) ? ucbuffer[ucIndex] : '.');
         }
         fprintf(pOutputFile, "|\n");
-        ulOffset += ulBytesRead;
+        ulOffset += ucBytesRead;
     }
     return blHexdumpWriteSuccess;
 }

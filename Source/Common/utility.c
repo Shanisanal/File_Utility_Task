@@ -70,7 +70,7 @@ static const CONVERSION_MAP sstConversionMap[] =
 
 static const pArgHandler sstArgHandlers[] = 
 {
-    NULL, HandleType, HandleInput, HandleOutput   
+    NULL, HandleType, HandleInput, HandleOutput
 };
 
 //****************************** ExecuteApplication ***************************
@@ -137,7 +137,7 @@ bool ParseArguments(int lArgCount, char* pcArgv[],ARGUMENTS* pstArguments)
 
     if(blTypeFound == true)
     {
-        for (int lIndex = 1; (lIndex < lArgCount); lIndex ++) 
+        for (int lIndex = 1; lIndex < lArgCount; lIndex ++) 
         {
             if (lIndex + 1 < lArgCount) 
             {
@@ -146,18 +146,26 @@ bool ParseArguments(int lArgCount, char* pcArgv[],ARGUMENTS* pstArguments)
                 if (eFlag > ARG_INVALID ) 
                 {
                     blTypeFound = sstArgHandlers[eFlag](pstArguments, pcArgv[lIndex + 1]);
-                    lIndex++; 
+                
+                    if(blTypeFound == true) 
+                    {
+                        lIndex++; 
+                    }
+                    else 
+                    {
+                        break;
+                    }
                 }
                 else 
                 {
-                    fprintf(stderr, "Error: Unknown flag '%s'\n", pcArgv[lIndex]);
                     blTypeFound = false;
+                    break;
                 }
             }
             else 
             {
-                fprintf(stderr, "Error: Argument '%s' is missing a value\n", pcArgv[lIndex]);
                 blTypeFound = false;
+                break;
             }
         }
 
@@ -189,10 +197,6 @@ static bool HandleType(ARGUMENTS* pstArgs, const char* pcValue)
     {
         pstArgs->pucArgumentType = (uint8_t*)pcValue;
     } 
-    else 
-    {
-        fprintf(stderr, "Error: Invalid type \n");
-    }
 
     return blValidateSuccess;
 }
@@ -264,7 +268,7 @@ static bool ValidateArgumentType(uint8_t* pucArgumentType)
         blIsValidType = false;
     }
     
-    if(pucArgumentType != NULL) 
+    if(blIsValidType == true) 
     {
         for(uint32_t ulIndex = 0; ulIndex < CONVERTER_COUNT; ulIndex++) 
         {
@@ -273,6 +277,10 @@ static bool ValidateArgumentType(uint8_t* pucArgumentType)
             {
                 blIsValidType = true;
                 break;
+            }
+            else 
+            {
+                blIsValidType = false;
             }
         }
     }
@@ -335,21 +343,23 @@ bool RunUtility(ARGUMENTS* pstArguments)
         pstArguments->pucInputFileName == NULL ||
         pstArguments->pucOutputFileName == NULL) 
     {
-        fprintf(stderr, "Error: Missing required arguments. %s", FORMAT_MSG);
         blConvertSuccess = false;
     }
-
-    for(uint32_t ulIndex = 0; ulIndex < CONVERTER_COUNT; ulIndex++) 
+    
+    if(blConvertSuccess == true) 
     {
-        if (strcmp((char *)pstArguments->pucArgumentType, 
-                   (char *)sstConversionMap[ulIndex].pcConversionType) == 0) 
+        for(uint32_t ulIndex = 0; ulIndex < CONVERTER_COUNT; ulIndex++) 
         {
-            blConvertSuccess = sstConversionMap[ulIndex].pfnFileConverter(
-                                           pstArguments->pucInputFileName, 
-                                           pstArguments->pucOutputFileName);
-            break;
+            if (strcmp((char *)pstArguments->pucArgumentType, 
+                    (char *)sstConversionMap[ulIndex].pcConversionType) == 0) 
+            {
+                blConvertSuccess = sstConversionMap[ulIndex].pfnFileConverter(
+                                            pstArguments->pucInputFileName, 
+                                            pstArguments->pucOutputFileName);
+                break;
+            }
         }
     }
-    
+
     return blConvertSuccess;
 }

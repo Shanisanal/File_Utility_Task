@@ -95,7 +95,6 @@ bool ExecuteApplication(int lArgCount, char* pcArgv[])
     if(blConversionResult == true) 
     {
         blConversionResult = ParseArguments(lArgCount, pcArgv, &stArguments);
-       
     }
 
     if(blConversionResult == true) 
@@ -252,7 +251,7 @@ static bool HandleOutput(ARGUMENTS* pstArgs, const char* pcValue)
 // Purpose : Validates the argument type against a list of supported types.
 // Inputs  : pucArgumentType - pointer to the argument type string
 // Outputs : None
-// Return  : bool - true if the argument type is valid, false otherwise
+// Return  : true if the argument type is valid, false otherwise
 // Notes   : 
 //   - Checks against a predefined list of supported conversion types.
 //*****************************************************************************

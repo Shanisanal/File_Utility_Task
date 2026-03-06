@@ -40,28 +40,32 @@
 //*****************************************************************************
 int main(int lArgCount, char* pcArgv[]) 
 {
-    bool blExecutionResult = false;
+    bool blExecutionResult = true;
+    int lReturnCode = 1;
 
     if (lArgCount <= 1 || pcArgv == NULL) 
     {
         fprintf(stderr, FORMAT_MSG);
-        return 1;
+        blExecutionResult   =  false;
     }
 
-    blExecutionResult = ExecuteApplication(lArgCount, pcArgv);
-
-    if (blExecutionResult == true) 
+    if(blExecutionResult == true) 
     {
-        fprintf(stderr, "Application executed successfully.\n");
-        return 0;
-    }
-    else
-    {
-        fprintf(stdout, "Application execution failed.\n");
-        return 1;
+        blExecutionResult = ExecuteApplication(lArgCount, pcArgv);
+
+        if (blExecutionResult == true) 
+        {
+            fprintf(stdout, "Application executed successfully.\n");
+            lReturnCode = 0;
+        }
+        else
+        {
+            fprintf(stderr, "Application execution failed.\n");
+            lReturnCode = 1;    
+        }
     }
 
-    return 0;
+    return lReturnCode;
 }
 
 // EOF

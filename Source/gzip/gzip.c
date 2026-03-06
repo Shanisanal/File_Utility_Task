@@ -14,6 +14,7 @@
 //******************************* Include Files ******************************* 
 #include <stdio.h> 
 #include <zlib.h>
+#include <errno.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include "Common/utility.h"
@@ -46,19 +47,19 @@ bool GzipConvert(uint8_t* pucInput, uint8_t* pucOutput)
 
     if(pucInput == NULL || pucOutput == NULL) 
     {
-        fprintf(stderr, "Error: Input and output file paths NULL.\n");
+        fprintf(stderr, "Error: Input or output file paths NULL.\n");
         blSuccess = false;
     }
 
     if(blSuccess == true)
     {
-            FILE* pInputfile  = fopen((const char *)pucInput, FILE_MODE_READ_BINARY);
-    
-            if (pInputfile == NULL) 
-            { 
-                fprintf(stderr, "Error opening input file.\n"); 
-                blSuccess = false; 
-            }
+        pInputfile  = fopen((const char *)pucInput, FILE_MODE_READ_BINARY);
+
+        if (pInputfile == NULL) 
+        { 
+            fprintf(stderr, "Error opening input file.\n"); 
+            blSuccess = false; 
+        }
     }
 
     if(blSuccess == true)
@@ -107,6 +108,7 @@ static bool GzipDataCompress(FILE* pInputfile, gzFile pstOutputfile)
 
     if(pInputfile == NULL || pstOutputfile == NULL) 
     {
+       fprintf(stderr, "Error: Invalid file pointers for gzip compression.\n"); 
        blDataCompressionSuccess = false;
     }
 

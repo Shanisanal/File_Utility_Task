@@ -30,6 +30,7 @@
 
 # Executables
 *.exe
+*.EXE
 *.out
 *.app
 *.i*86
@@ -53,3 +54,15 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# VS Code settings 
+.vscode/
+
+# Ignore all text files
+*.txt
+
+# Ignore all gzip compressed files
+*.gz
+
+# Ignore all pdf files
+*.pdf

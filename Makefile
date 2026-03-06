@@ -22,7 +22,7 @@ OBJS_DEBUG   = $(addprefix $(DEBUG_DIR)/, $(notdir $(SRCS:.c=.o)))
 vpath %.c Source Source/gzip Source/hexdump Source/srec Source/Common
 
 # Executable name
-TARGET = utility.exe
+TARGET = utility
 
 # Default rule
 all: release

@@ -46,7 +46,7 @@ int main(int lArgCount, char* pcArgv[])
     if (lArgCount <= 1 || pcArgv == NULL) 
     {
         fprintf(stderr, FORMAT_MSG);
-        blExecutionResult   =  false;
+        blExecutionResult = false;
     }
 
     if(blExecutionResult == true) 
@@ -61,7 +61,7 @@ int main(int lArgCount, char* pcArgv[])
         else
         {
             fprintf(stderr, "Application execution failed.\n");
-            lReturnCode = 1;    
+            lReturnCode = 1;
         }
     }
 

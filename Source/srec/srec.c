@@ -102,7 +102,7 @@ bool SrecConvert(uint8_t* pucInput, uint8_t* pucOutput)
 
     if (pucInput == NULL || pucOutput == NULL) 
     {
-        fprintf(stderr, "Error: Input and output file paths NULL.\n");
+        fprintf(stderr, "Error: Input or output file paths NULL.\n");
         blSuccess = false;
     }
 

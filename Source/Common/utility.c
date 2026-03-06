@@ -38,18 +38,13 @@
 //***************************** Local Variables ******************************* 
 typedef bool (*pFileConverter)(uint8_t* pucInput, uint8_t* pucOutput);
 
+typedef bool (*pArgHandler)(ARGUMENTS* pstArgs, const char* pcValue);
+
 typedef struct _CONVERSION_MAP_
  { 
     const char*  pcConversionType; 
     pFileConverter pfnFileConverter;
 } CONVERSION_MAP;
-
-static const CONVERSION_MAP sstConversionMap[] = 
-{
-    {ARG_TYPE_GZIP, GzipConvert},
-    {ARG_TYPE_HEXDUMP, HexdumpConvert},
-    {ARG_TYPE_SREC, SrecConvert}
-};
 
 typedef enum 
 {
@@ -62,6 +57,21 @@ typedef enum
 //****************************** Local Functions ******************************/
 static ARG_FLAG GetArgumentFlag(const char* pcArg) ;
 static bool ValidateArgumentType(uint8_t* pucArgumentType) ;
+static bool HandleType(ARGUMENTS* pstArgs, const char* pcValue) ;
+static bool HandleInput(ARGUMENTS* pstArgs, const char* pcValue) ;
+static bool HandleOutput(ARGUMENTS* pstArgs, const char* pcValue) ;
+
+static const CONVERSION_MAP sstConversionMap[] = 
+{
+    {ARG_TYPE_GZIP, GzipConvert},
+    {ARG_TYPE_HEXDUMP, HexdumpConvert},
+    {ARG_TYPE_SREC, SrecConvert}
+};
+
+static const pArgHandler sstArgHandlers[] = 
+{
+    NULL, HandleType, HandleInput, HandleOutput   
+};
 
 //****************************** ExecuteApplication ***************************
 // Purpose : Parses arguments and executes the appropriate utility function.
@@ -74,37 +84,34 @@ static bool ValidateArgumentType(uint8_t* pucArgumentType) ;
 bool ExecuteApplication(int lArgCount, char* pcArgv[])
 {
     ARGUMENTS stArguments = {0};
-    bool blConversionResult = false;
+    bool blConversionResult = true;
     
     if (pcArgv == NULL || lArgCount <= 1) 
     {
         fprintf(stderr, FORMAT_MSG);
-        return false;
+        blConversionResult = false;
     }
-    blConversionResult = ParseArguments(lArgCount, pcArgv, &stArguments);
+    if(blConversionResult == true) 
+    {
+        blConversionResult = ParseArguments(lArgCount, pcArgv, &stArguments);
+       
+    }
 
     if(blConversionResult == true) 
     {
-        blConversionResult = false;
         blConversionResult = RunUtility(&stArguments);
 
-        if(blConversionResult == true) 
-        {
-            return true;;
-        }
-        else
+        if(blConversionResult == false)
         {
             fprintf(stderr, "Error: Utility execution failed.\n");
-            return false;
         }
     }
     else
     {
         fprintf(stderr, "Error: Failed to parse arguments. %s", FORMAT_MSG);
-        return false;
     }
    
-    return true;
+    return blConversionResult;
 }
 //****************************** ParseArguments *******************************
 // Purpose : Extracts command-line arguments and stores them in an ARGUMENTS 
@@ -113,7 +120,7 @@ bool ExecuteApplication(int lArgCount, char* pcArgv[])
 //           pcArgv[]  - pointer to array of argument strings
 //           pstArguments - pointer to ARGUMENTS structure
 // Outputs : pstArguments - Arguments values are passed into it
-// Return  : bool - populated structure with parsed arguments
+// Return  : true if arguments were parsed successfully, false otherwise
 // Notes   : 
 //   - Recognizes flags: -t <type>, -i <input>, -o <output>
 //   - If a flag is missing, the corresponding field remains NULL.
@@ -121,54 +128,124 @@ bool ExecuteApplication(int lArgCount, char* pcArgv[])
 //*****************************************************************************
 bool ParseArguments(int lArgCount, char* pcArgv[],ARGUMENTS* pstArguments) 
 {
-    bool blTypeFound = false;
+    bool blTypeFound = true;
 
     if (pcArgv == NULL || pstArguments == NULL || lArgCount <= 1) 
     {
-        return blTypeFound; 
+        blTypeFound = false;
     }
 
-    for (int lIndex = 1; lIndex < lArgCount; lIndex++) 
+    if(blTypeFound == true)
     {
-        if(lIndex + 1 > lArgCount) 
+        for (int lIndex = 1; (lIndex < lArgCount); lIndex += 2) 
         {
-            fprintf(stderr, "Error: Missing value for argument %s\n", pcArgv[lIndex]);
-            break;
-        }
-        ARG_FLAG eFlag = GetArgumentFlag(pcArgv[lIndex]);
+            if (lIndex + 1 < lArgCount) 
+            {
+                ARG_FLAG eFlag = GetArgumentFlag(pcArgv[lIndex]);
 
-        switch (eFlag) 
-        {
-            case ARG_TYPE:
-            {
-                pstArguments->pucArgumentType = (uint8_t*)pcArgv[lIndex + 1];
-                blTypeFound = ValidateArgumentType(pstArguments->pucArgumentType);
-                if(blTypeFound == false) 
+                if (eFlag > ARG_INVALID ) 
                 {
-                    fprintf(stderr, "Error: Invalid argument type \n");
-                    return blTypeFound;
+                    blTypeFound = sstArgHandlers[eFlag](pstArguments, pcArgv[lIndex + 1]);
                 }
-                break;
+                else 
+                {
+                    fprintf(stderr, "Error: Unknown flag '%s'\n", pcArgv[lIndex]);
+                    blTypeFound = false;
+                }
             }
-            case ARG_INPUT_FILENAME:
+            else 
             {
-                pstArguments->pucInputFileName = (uint8_t*)pcArgv[lIndex + 1];
-                break;
-            }
-            case ARG_OUTPUT_FILENAME:
-            {
-                pstArguments->pucOutputFileName = (uint8_t*)pcArgv[lIndex + 1];
-                blTypeFound = true;
-                break;
-            }
-            default:
-            {
-                break;
+                fprintf(stderr, "Error: Flag '%s' is missing a value\n", pcArgv[lIndex]);
+                blTypeFound = false;
             }
         }
+
     }
+
     return blTypeFound;
 }
+
+//****************************** HandleType *******************************
+// Purpose : Handles the type argument and validates it.
+// Inputs  : pstArguments - pointer to ARGUMENTS structure
+//           pcValue - pointer to the argument value string
+// Outputs : pstArguments - Arguments values are passed into it
+// Return  : true if the type argument is valid, false otherwise
+// Notes   : None
+//*****************************************************************************
+static bool HandleType(ARGUMENTS* pstArgs, const char* pcValue) 
+{
+    bool blValidateSuccess = true;
+
+    if(pstArgs == NULL || pcValue == NULL) 
+    {
+        blValidateSuccess = false;
+    }
+
+    blValidateSuccess =  ValidateArgumentType((uint8_t*)pcValue);
+    
+    if (blValidateSuccess == true) 
+    {
+        pstArgs->pucArgumentType = (uint8_t*)pcValue;
+    } 
+    else 
+    {
+        fprintf(stderr, "Error: Invalid type \n");
+    }
+
+    return blValidateSuccess;
+}
+
+//****************************** HandleInput *******************************
+// Purpose : Handles the input filename argument and validates it.
+// Inputs  : pstArguments - pointer to ARGUMENTS structure
+//           pcValue - pointer to the argument value string
+// Outputs : pstArguments - Arguments values are passed into it
+// Return  : true if the input filename argument is valid, false otherwise
+// Notes   : None
+//*****************************************************************************
+static bool HandleInput(ARGUMENTS* pstArgs, const char* pcValue) 
+{
+    bool blValidateSuccess = true;
+    
+    if(pstArgs == NULL || pcValue == NULL) 
+    {
+        blValidateSuccess = false;
+    }
+
+    if(blValidateSuccess == true) 
+    {
+        pstArgs->pucInputFileName = (uint8_t*)pcValue;
+    }
+
+    return blValidateSuccess;
+}
+
+//****************************** HandleOutput *******************************
+// Purpose : Handles the output filename argument and validates it.
+// Inputs  : pstArguments - pointer to ARGUMENTS structure
+//           pcValue - pointer to the argument value string
+// Outputs : pstArguments - Arguments values are passed into it
+// Return  : true if the output filename argument is valid, false otherwise
+// Notes   : None
+//*****************************************************************************
+static bool HandleOutput(ARGUMENTS* pstArgs, const char* pcValue) 
+{
+    bool blValidateSuccess = true;
+
+    if(pstArgs == NULL || pcValue == NULL) 
+    {
+        blValidateSuccess = false;
+    }
+
+    if(blValidateSuccess == true) 
+    {
+        pstArgs->pucOutputFileName = (uint8_t*)pcValue;
+    }
+
+    return blValidateSuccess;
+}
+
 //****************************** ValidateArgumentType **************************
 // Purpose : Validates the argument type against a list of supported types.
 // Inputs  : pucArgumentType - pointer to the argument type string
@@ -179,7 +256,7 @@ bool ParseArguments(int lArgCount, char* pcArgv[],ARGUMENTS* pstArguments)
 //*****************************************************************************
 static bool ValidateArgumentType(uint8_t* pucArgumentType) 
 {
-    bool blIsValidType = false;
+    bool blIsValidType = true;
 
     if(pucArgumentType == NULL) 
     {
@@ -212,29 +289,31 @@ static bool ValidateArgumentType(uint8_t* pucArgumentType)
 //*****************************************************************************
 static ARG_FLAG GetArgumentFlag(const char* pcArg) 
 {
+    ARG_FLAG eFoundFlag = ARG_INVALID;
+
     if (pcArg == NULL) 
     {
-        return ARG_INVALID;
+        eFoundFlag = ARG_INVALID;
     }
 
     if (strcmp(pcArg, ARG_TYPE_FLAG) == 0) 
     {
-        return ARG_TYPE;
+        eFoundFlag =  ARG_TYPE;
     } 
     else if (strcmp(pcArg, ARG_INPUT_FLAG) == 0) 
     {
-        return ARG_INPUT_FILENAME;
+        eFoundFlag =  ARG_INPUT_FILENAME;
     } 
     else if (strcmp(pcArg, ARG_OUTPUT_FLAG) == 0) 
     {
-        return ARG_OUTPUT_FILENAME;
+        eFoundFlag =  ARG_OUTPUT_FILENAME;
     } 
     else 
     {
-        return ARG_INVALID;
+        eFoundFlag =  ARG_INVALID;
     }
 
-    return ARG_INVALID;
+    return eFoundFlag;
 }
 //****************************** RunUtility ***********************************
 // Purpose : Executes the file utility based on parsed arguments.Validates 
@@ -249,14 +328,14 @@ static ARG_FLAG GetArgumentFlag(const char* pcArg)
 
 bool RunUtility(ARGUMENTS* pstArguments) 
 {
-    bool blConvertSuccess = false;
+    bool blConvertSuccess = true;
 
     if (pstArguments->pucArgumentType == NULL  ||
         pstArguments->pucInputFileName == NULL ||
         pstArguments->pucOutputFileName == NULL) 
     {
         fprintf(stderr, "Error: Missing required arguments. %s", FORMAT_MSG);
-        return blConvertSuccess;
+        blConvertSuccess = false;
     }
 
     for(uint32_t ulIndex = 0; ulIndex < CONVERTER_COUNT; ulIndex++) 
